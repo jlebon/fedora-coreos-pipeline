@@ -20,6 +20,16 @@ properties([
 podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultContainer: 'jnlp') {
     node('coreos-assembler') { container('coreos-assembler') {
 
+        // If the cache img is larger than e.g. 8G, then nuke it. Otherwise
+        // it'll just keep growing and we'll hit ENOSPC. Not worth trying to
+        // do some fancy cache invalidation here.
+        utils.shwrap("""
+        if [ \$(du cache/cache.qcow2 | cut -f1) -gt \$((1024*1024*3)) ]; then
+            rm -vrf cache/cache.qcow2
+        fi
+        """)
+        return
+
         stage('Init') {
             utils.shwrap("""
             if [ ! -d src/config ]; then
@@ -64,15 +74,6 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
         stage('Prune') {
             utils.shwrap("""
             coreos-assembler prune --keep=10
-            """)
-
-            // If the cache img is larger than e.g. 8G, then nuke it. Otherwise
-            // it'll just keep growing and we'll hit ENOSPC. Not worth trying to
-            // do some fancy cache invalidation here.
-            utils.shwrap("""
-            if [ \$(du cache/cache.qcow2 | cut -f1) -gt \$((1024*1024*8)) ]; then
-                rm -rf cache/cache.qcow2
-            fi
             """)
         }
 
