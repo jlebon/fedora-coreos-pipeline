@@ -28,6 +28,8 @@ properties([
     ])
 ])
 
+def s3_builddir = "fcos-builds/prod/streams/${params.STREAM}"
+
 podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultContainer: 'jnlp') {
     node('coreos-assembler') { container('coreos-assembler') {
 
@@ -43,12 +45,19 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             if (!devel) {
                 // make sure our cached version matches prod exactly before continuing
                 utils.rsync_in("builds", "builds")
+
+                /*
+                utils.shwrap("""
+                coreos-assembler buildprep s3://${s3_builddir}
+                """)
+                */
             }
 
             utils.shwrap("""
             git -C src/config pull
             coreos-assembler fetch
             """)
+
         }
 
         def prevBuildID = null
@@ -129,6 +138,12 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             // https://stackoverflow.com/questions/1636889
             if (!devel) {
                 utils.rsync_out("builds", "builds")
+                if (utils.path_exists("/.aws")) {
+                  // XXX: just upload as public-read for now
+                  utils.shwrap("""
+                  coreos-assembler upload s3 --acl=public-read ${s3_builddir}
+                  """)
+                }
             }
         }
     }}
