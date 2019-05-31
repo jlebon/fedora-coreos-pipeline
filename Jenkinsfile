@@ -1,22 +1,36 @@
-def pod, utils, devel
+def pod, utils, prod, devel_prefix, src_config_url, src_config_ref
 node {
     checkout scm
     pod = readFile(file: "manifests/pod.yaml")
     utils = load("utils.groovy")
 
     // just autodetect if we're in prod or not
-    devel = (env.JENKINS_URL != 'https://jenkins-fedora-coreos.apps.ci.centos.org/')
+    def prod_jenkins = (env.JENKINS_URL == 'https://jenkins-fedora-coreos.apps.ci.centos.org/')
+    def prod_job = (env.JOB_NAME == 'fedora-coreos/fedora-coreos-pipeline')
+    prod = (prod_jenkins && prod_job)
 
-    if (devel) {
-        echo "Running in devel mode on ${env.JENKINS_URL}."
-    } else {
+    if (prod) {
         echo "Running in prod mode."
+    } else {
+        echo "Running in devel mode on ${env.JENKINS_URL}."
+    }
+
+    devel_prefix = utils.get_pipeline_annotation('dev-prefix')
+    src_config_url = utils.get_pipeline_annotation('source-config-url')
+    src_config_ref = utils.get_pipeline_annotation('source-config-ref')
+
+    // sanity check that a valid prefix is provided if in devel mode and drop
+    // the trailing '-' in the devel prefix
+    if (!prod) {
+      assert devel_prefix.length() > 0 : "Missing devel prefix"
+      assert devel_prefix.endsWith("-") : "Missing trailing dash in devel prefix"
+      devel_prefix = devel_prefix[0..-2]
     }
 }
 
 properties([
     disableConcurrentBuilds(),
-    pipelineTriggers(devel ? [] : [cron("H/30 * * * *")]),
+    pipelineTriggers(prod ? [cron("H/30 * * * *")] : []),
     parameters([
       choice(name: 'STREAM',
              // XXX: Just pretend we're the testing stream for now... in
@@ -28,36 +42,46 @@ properties([
     ])
 ])
 
-def s3_builddir = "fcos-builds/prod/streams/${params.STREAM}"
+def s3_builddir
+if (prod) {
+  s3_builddir = "fcos-builds/prod/streams/${params.STREAM}"
+} else {
+  // One prefix = one pipeline = one stream; the devel-up script is geared
+  // towards testing a specific combination of (cosa, pipeline, fcos config),
+  // not a full duplication of all the prod streams. One can always instantiate
+  // a second prefix to test a separate combination if more than 1 concurrent
+  // devel pipeline is needed.
+  s3_builddir = "fcos-builds/devel/streams/${devel_prefix}"
+}
 
 podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultContainer: 'jnlp') {
     node('coreos-assembler') { container('coreos-assembler') {
 
         stage('Init') {
             utils.shwrap("""
-            if [ ! -d src/config ]; then
-                coreos-assembler init https://github.com/coreos/fedora-coreos-config
-            fi
+            # just always restart from scratch in case it's a devel pipeline
+            # and it changed source url or ref
+            rm -rf src/config
+
+            # in the future, the stream will dictate the branch in the prod path
+            coreos-assembler init --force --branch ${src_config_ref} ${src_config_url}
             """)
         }
 
         stage('Fetch') {
-            if (!devel) {
-                // make sure our cached version matches prod exactly before continuing
-                utils.rsync_in("builds", "builds")
-
-                /*
+            /*
+            // XXX: uncomment once we have a build there
+            if (utils.path_exists("/.aws")) {
                 utils.shwrap("""
                 coreos-assembler buildprep s3://${s3_builddir}
                 """)
-                */
             }
+            */
 
-            utils.shwrap("""
-            git -C src/config pull
-            coreos-assembler fetch
-            """)
-
+            if (prod) {
+                // make sure our cached version matches prod exactly before continuing
+                utils.rsync_in("builds", "builds")
+            }
         }
 
         def prevBuildID = null
@@ -105,6 +129,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
         }
 
         stage('Prune') {
+            // XXX: stop pruning like this when we fully drop artifact server
             utils.shwrap("""
             coreos-assembler prune --keep=8
             """)
@@ -129,6 +154,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
 
             // Change perms to allow reading on webserver side.
             // Don't touch symlinks (https://github.com/CentOS/sig-atomic-buildscripts/pull/355)
+            // XXX: can drop this when dropping artifact server
             utils.shwrap("""
             find builds/ ! -type l -exec chmod a+rX {} +
             """)
@@ -136,14 +162,15 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             // Note that if the prod directory doesn't exist on the remote this
             // will fail. We can possibly hack around this in the future:
             // https://stackoverflow.com/questions/1636889
-            if (!devel) {
+            if (prod) {
                 utils.rsync_out("builds", "builds")
-                if (utils.path_exists("/.aws")) {
-                  // XXX: just upload as public-read for now
-                  utils.shwrap("""
-                  coreos-assembler upload s3 --acl=public-read ${s3_builddir}
-                  """)
-                }
+            }
+
+            if (utils.path_exists("/.aws")) {
+              // XXX: just upload as public-read for now
+              utils.shwrap("""
+              coreos-assembler upload s3 --acl=public-read ${s3_builddir}
+              """)
             }
         }
     }}
