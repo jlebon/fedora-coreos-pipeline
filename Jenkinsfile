@@ -103,11 +103,11 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
 
         stage('Fetch') {
             // XXX: drop `!prod && ` once we've uploaded prod builds there
-            if (!prod && s3_builddir) {
-                utils.shwrap("""
-                coreos-assembler buildprep s3://${s3_builddir}
-                """)
-            }
+            //if (!prod && s3_builddir) {
+            //    utils.shwrap("""
+            //    coreos-assembler buildprep s3://${s3_builddir}
+            //    """)
+            //}
 
             if (prod) {
                 // make sure our cached version matches prod exactly before continuing
