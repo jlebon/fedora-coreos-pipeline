@@ -125,7 +125,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
         }
 
         stage('Build') {
-            def force = (params.FORCE == "true") ? "--force" : ""
+            def force = params.FORCE ? "--force" : ""
             utils.shwrap("""
             coreos-assembler build --skip-prune ${force}
             """)
