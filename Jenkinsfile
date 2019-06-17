@@ -109,7 +109,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
         stage('Build') {
             def force = params.FORCE ? "--force" : ""
             utils.shwrap("""
-            coreos-assembler build --skip-prune ${force}
+            coreos-assembler build --skip-prune ${force} ostree
             """)
         }
 
@@ -122,45 +122,45 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             currentBuild.description = "⚡ ${newBuildID}"
         }
 
-        stage('Build Metal') {
-            utils.shwrap("""
-            coreos-assembler buildextend-metal
-            """)
-        }
+        //stage('Build Metal') {
+        //    utils.shwrap("""
+        //    coreos-assembler buildextend-metal
+        //    """)
+        //}
 
-        stage('Build Installer') {
-            utils.shwrap("""
-            coreos-assembler buildextend-installer
-            """)
-        }
+        //stage('Build Installer') {
+        //    utils.shwrap("""
+        //    coreos-assembler buildextend-installer
+        //    """)
+        //}
 
-        stage('Build Openstack') {
-            utils.shwrap("""
-            coreos-assembler buildextend-openstack
-            """)
-        }
+        //stage('Build Openstack') {
+        //    utils.shwrap("""
+        //    coreos-assembler buildextend-openstack
+        //    """)
+        //}
 
-        stage('Build VMware') {
-            utils.shwrap("""
-            coreos-assembler buildextend-vmware
-            """)
-        }
+        //stage('Build VMware') {
+        //    utils.shwrap("""
+        //    coreos-assembler buildextend-vmware
+        //    """)
+        //}
 
-        stage('Prune Cache') {
-            utils.shwrap("""
-            coreos-assembler prune --keep=1
-            """)
+        //stage('Prune Cache') {
+        //    utils.shwrap("""
+        //    coreos-assembler prune --keep=1
+        //    """)
 
-            // If the cache img is larger than e.g. 8G, then nuke it. Otherwise
-            // it'll just keep growing and we'll hit ENOSPC.
-            utils.shwrap("""
-            if [ \$(du cache/cache.qcow2 | cut -f1) -gt \$((1024*1024*8)) ]; then
-                rm -vf cache/cache.qcow2
-                qemu-img create -f qcow2 cache/cache.qcow2 10G
-                LIBGUESTFS_BACKEND=direct virt-format --filesystem=xfs -a cache/cache.qcow2
-            fi
-            """)
-        }
+        //    // If the cache img is larger than e.g. 8G, then nuke it. Otherwise
+        //    // it'll just keep growing and we'll hit ENOSPC.
+        //    utils.shwrap("""
+        //    if [ \$(du cache/cache.qcow2 | cut -f1) -gt \$((1024*1024*8)) ]; then
+        //        rm -vf cache/cache.qcow2
+        //        qemu-img create -f qcow2 cache/cache.qcow2 10G
+        //        LIBGUESTFS_BACKEND=direct virt-format --filesystem=xfs -a cache/cache.qcow2
+        //    fi
+        //    """)
+        //}
 
         stage('Archive') {
 
