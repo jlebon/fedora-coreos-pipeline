@@ -54,15 +54,6 @@ if (prod) {
 podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultContainer: 'jnlp') {
     node('coreos-assembler') { container('coreos-assembler') {
 
-        // Only use the PVC for prod caching. For devel pipelines, we just
-        // always refetch from scratch: we don't want to allocate cached data
-        // for pipelines which may only run once.
-        if (prod) {
-          utils.workdir = "/srv"
-        } else {
-          utils.workdir = env.WORKSPACE
-        }
-
         // this is defined IFF we *should* and we *can* upload to S3
         def s3_builddir
 
@@ -78,13 +69,6 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             // devel pipeline is needed.
             s3_builddir = "${s3_bucket}/devel/streams/${devel_prefix}/builds"
           }
-        }
-
-        // Special case for devel pipelines not running in our project and not
-        // uploading to S3; in that case, the only way to make the builds
-        // accessible at all is to have them in the PVC.
-        if (!prod && !prod_jenkins && !s3_builddir) {
-            utils.workdir = "/srv"
         }
 
         stage('Init') {
@@ -191,6 +175,11 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
               utils.shwrap("""
               coreos-assembler buildupload s3 --acl=public-read ${s3_builddir}
               """)
+            } else if (!prod) {
+              // In devel mode without an S3 server, just archive in Jenkins
+              // itself. Otherwise there'd be no other way to retrieve the
+              // artifacts.
+              archiveArtifacts('builds/latest/*')
             }
 
             // XXX: For now, we keep uploading the latest build to the artifact
