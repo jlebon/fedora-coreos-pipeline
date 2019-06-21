@@ -168,7 +168,7 @@ def update_resources(args, resources):
 
 def is_default_resource(resource):
     annos = resource['metadata'].get('annotations', {})
-    return annos.get('coreos.com/deploy-default')
+    return annos.get('coreos.com/deploy-default') == "true"
 
 
 def resource_action(resource):
