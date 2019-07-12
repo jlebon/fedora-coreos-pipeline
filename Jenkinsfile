@@ -38,6 +38,10 @@ properties([
              choices: (streams.development + streams.production + streams.mechanical),
              description: 'Fedora CoreOS stream to build',
              required: true),
+      string(name: 'VERSION',
+             description: 'Override default versioning mechanism',
+             defaultValue: '',
+             trim: true),
       booleanParam(name: 'FORCE',
                    defaultValue: false,
                    description: 'Whether to force a rebuild'),
@@ -124,8 +128,9 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
 
         stage('Build') {
             def force = params.FORCE ? "--force" : ""
+            def version = params.VERSION ? "--version ${params.VERSION}" : ""
             utils.shwrap("""
-            coreos-assembler build --skip-prune ${force}
+            coreos-assembler build --skip-prune ${force} ${version}
             """)
         }
 
