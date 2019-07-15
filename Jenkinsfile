@@ -171,6 +171,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
                 coreos-assembler buildextend-vmware
                 """)
             }
+        }
 
             // Key off of s3_builddir: i.e. if we're configured to upload artifacts
             // to S3, we also take that to mean we should upload an AMI. We could
@@ -192,7 +193,6 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
                     """)
                 }
             }
-        }
 
         stage('Prune Cache') {
             // If the cache img is larger than e.g. 8G, then nuke it. Otherwise
@@ -239,20 +239,19 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
 
         // Really, these steps would normally be done separately from here after we're ready
         // to actually release a build. Right now, essentially every build is released.
-        if (official) {
+        //if (official) {
             stage('Publish') {
-                // Run plume to publish official builds; This will handle modifying
-                // object ACLs and creating/modifying the releases.json metadata index
-                utils.shwrap("""
-                # https://github.com/coreos/mantle/issues/1023
-                export AWS_SDK_LOAD_CONFIG=1
-                plume release --distro fcos \
-                    --version ${newBuildID} \
-                    --channel ${params.STREAM} \
-                    --bucket ${s3_bucket}
-                """)
+                //// Run plume to publish official builds; This will handle modifying
+                //// object ACLs and creating/modifying the releases.json metadata index
+                //utils.shwrap("""
+                //export AWS_SDK_LOAD_CONFIG=1 # https://github.com/coreos/mantle/issues/1023
+                //plume release --distro fcos \
+                //    --version ${newBuildID} \
+                //    --channel ${params.STREAM} \
+                //    --bucket ${s3_bucket}
+                //""")
 
-                if (!params.MINIMAL) {
+                //if (!params.MINIMAL) {
                     // And make AMIs launchable by all; XXX: should probably integrate this into
                     // `plume release --distro fcos` along with copying into other regions.
                     def hvm = utils.shwrap_capture("jq -r '.amis[0].hvm' builds/${newBuildID}/x86_64/meta.json")
@@ -261,8 +260,8 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
                         --image-id ${hvm} \
                         --launch-permission '{"Add": [{"Group":"all"}]}'
                     """)
-                }
+                //}
             }
-        }
+        //}
     }}
 }
