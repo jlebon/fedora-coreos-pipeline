@@ -35,4 +35,14 @@ def path_exists(path) {
     return shwrap_rc("test -e ${path}") == 0
 }
 
+def get_basearch() {
+    // behold! python in shell in groovy!
+    return shwrap_capture(""" python3 -c '
+import gi
+gi.require_version("RpmOstree", "1.0")
+from gi.repository import RpmOstree
+print(RpmOstree.get_basearch())
+    '""")
+}
+
 return this
