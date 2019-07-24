@@ -138,11 +138,11 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
         stage('Build') {
             def parent_arg = ""
             if (utils.path_exists("tmp/releases.json")) {
-                parent_commit = utils.shwrap_capture("""
-                    jq -r '.releases[-1].commits[] | select(.architecture == "${basearch}") | .checksum' tmp/releases.json
-                """)
+                def releases = readJSON file: "tmp/releases.json"
+                def commit_obj = releases["releases"][-1]["commits"].find{ commit -> commit["architecture"] == basearch }
+                parent_commit = commit_obj["checksum"]
                 parent_arg = "--parent ${parent_commit}"
-                parent_version = utils.shwrap_capture("jq -r '.releases[-1].version' tmp/releases.json")
+                parent_version = releases["releases"][-1]["version"]
             }
 
             def force = params.FORCE ? "--force" : ""
@@ -163,15 +163,11 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             // and insert the parent info into meta.json so we can display it in
             // the release browser and for sanity checking
             if (parent_commit && parent_version) {
-                utils.shwrap("""
-                echo '{
-                    "fedora-coreos.parent-version": "${parent_version}",
-                    "fedora-coreos.parent-commit": "${parent_commit}"
-                }' > tmp/parent.json
-                meta=builds/${newBuildID}/${basearch}/meta.json
-                cat \${meta} tmp/parent.json | jq -s add > tmp/meta.json.new
-                mv -f tmp/meta.json.new \${meta}
-                """)
+                def meta_json = "builds/${newBuildID}/${basearch}/meta.json"
+                def meta = readJSON file: meta_json
+                meta["fedora-coreos.parent-version"] = parent_version
+                meta["fedora-coreos.parent-commit"] = parent_commit
+                writeJSON file: meta_json, json: meta
             }
         }
 
