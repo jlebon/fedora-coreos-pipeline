@@ -172,21 +172,21 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             }
         }
 
-        stage('QEMU Kola Run') {
-            utils.shwrap("""
-            coreos-assembler kola run || :
-            tar -cf - tmp/kola/ | xz -c9 > _kola_temp.tar.xz
-            """)
-            archiveArtifacts "_kola_temp.tar.xz"
-        }
+        //stage('QEMU Kola Run') {
+        //    utils.shwrap("""
+        //    coreos-assembler kola run || :
+        //    tar -cf - tmp/kola/ | xz -c9 > _kola_temp.tar.xz
+        //    """)
+        //    archiveArtifacts "_kola_temp.tar.xz"
+        //}
 
-        // archive the image if the tests failed
-        def report = readJSON file: "tmp/kola/reports/report.json"
-        if (report["result"] != "PASS") {
-            archiveArtifacts "builds/latest/**/*.qcow2"
-            currentBuild.result = 'FAILURE'
-            return
-        }
+        //// archive the image if the tests failed
+        //def report = readJSON file: "tmp/kola/reports/report.json"
+        //if (report["result"] != "PASS") {
+        //    archiveArtifacts "builds/latest/**/*.qcow2"
+        //    currentBuild.result = 'FAILURE'
+        //    return
+        //}
 
         if (!params.MINIMAL) {
             stage('Build Metal') {
@@ -246,40 +246,40 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             """)
         }
 
-        stage('Archive') {
-            utils.shwrap("""
-            coreos-assembler compress --compressor xz
-            """)
+        //stage('Archive') {
+        //    utils.shwrap("""
+        //    coreos-assembler compress --compressor xz
+        //    """)
 
-            // Run the coreos-meta-translator against the most recent build,
-            // which will generate a release.json from the meta.json files
-            utils.shwrap("""
-            git clone https://github.com/coreos/fedora-coreos-releng-automation /var/tmp/fcos-releng
-            /var/tmp/fcos-releng/coreos-meta-translator/trans.py --workdir .
-            """)
+        //    // Run the coreos-meta-translator against the most recent build,
+        //    // which will generate a release.json from the meta.json files
+        //    utils.shwrap("""
+        //    git clone https://github.com/coreos/fedora-coreos-releng-automation /var/tmp/fcos-releng
+        //    /var/tmp/fcos-releng/coreos-meta-translator/trans.py --workdir .
+        //    """)
 
-            if (s3_stream_dir) {
-              // just upload as public-read for now, but see discussions in
-              // https://github.com/coreos/fedora-coreos-tracker/issues/189
-              utils.shwrap("""
-              # XXX: until we have e.g. `cosa sign` in place:
-              # https://github.com/coreos/coreos-assembler/issues/268
-              find builds/${newBuildID} -type f | xargs sha256sum | tee CHECKSUMS
-              sha256sum CHECKSUMS
-              mv CHECKSUMS builds/${newBuildID}
-              coreos-assembler buildupload s3 --acl=public-read ${s3_stream_dir}/builds
-              """)
-            } else if (!official) {
-              // In devel mode without an S3 server, just archive into the PVC
-              // itself. Otherwise there'd be no other way to retrieve the
-              // artifacts. But note we only keep one build at a time.
-              utils.shwrap("""
-              rm -rf ${developer_builddir}
-              mkdir -p ${developer_builddir}
-              cp -aT builds ${developer_builddir}
-              """)
-            }
-        }
+        //    if (s3_stream_dir) {
+        //      // just upload as public-read for now, but see discussions in
+        //      // https://github.com/coreos/fedora-coreos-tracker/issues/189
+        //      utils.shwrap("""
+        //      # XXX: until we have e.g. `cosa sign` in place:
+        //      # https://github.com/coreos/coreos-assembler/issues/268
+        //      find builds/${newBuildID} -type f | xargs sha256sum | tee CHECKSUMS
+        //      sha256sum CHECKSUMS
+        //      mv CHECKSUMS builds/${newBuildID}
+        //      coreos-assembler buildupload s3 --acl=public-read ${s3_stream_dir}/builds
+        //      """)
+        //    } else if (!official) {
+        //      // In devel mode without an S3 server, just archive into the PVC
+        //      // itself. Otherwise there'd be no other way to retrieve the
+        //      // artifacts. But note we only keep one build at a time.
+        //      utils.shwrap("""
+        //      rm -rf ${developer_builddir}
+        //      mkdir -p ${developer_builddir}
+        //      cp -aT builds ${developer_builddir}
+        //      """)
+        //    }
+        //}
     }}
 }
 
