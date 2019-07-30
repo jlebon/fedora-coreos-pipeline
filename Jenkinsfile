@@ -181,7 +181,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
 
         // archive the image if the tests failed
         def report = readJSON file: "tmp/kola/reports/report.json"
-        if (report["result"] != "PASS") {
+        if (report["result"] != "GARB") {
             utils.shwrap("coreos-assembler compress --compressor xz")
             archiveArtifacts "builds/latest/**/*.qcow2.xz"
             currentBuild.result = 'FAILURE'
