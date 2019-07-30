@@ -282,7 +282,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
 
         // For now, we auto-release all non-production streams builds. That
         // way, we can e.g. test testing-devel AMIs easily.
-        if (official && !(params.STREAM in streams.production)) {
+        //if (official && !(params.STREAM in streams.production)) {
             stage('Publish') {
                 // use master, which has `oc` in it already
                 node('master') {
@@ -293,6 +293,6 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
                     """)
                 }
             }
-        }
+        //}
     }}
 }
