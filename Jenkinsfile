@@ -284,11 +284,14 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
         // way, we can e.g. test testing-devel AMIs easily.
         if (official && !(params.STREAM in streams.production)) {
             stage('Publish') {
-                utils.shwrap("""
-                oc start-build --wait fedora-coreos-pipeline-release \
-                    -e STREAM=${params.STREAM} \
-                    -e VERSION=${newBuildID}
-                """)
+                // use master, which has `oc` in it already
+                node('master') {
+                    utils.shwrap("""
+                    oc start-build --wait fedora-coreos-pipeline-release \
+                        -e STREAM=${params.STREAM} \
+                        -e VERSION=${newBuildID}
+                    """)
+                }
             }
         }
     }}
