@@ -113,6 +113,8 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             // If the cache img is larger than e.g. 8G, then nuke it. Otherwise
             // it'll just keep growing and we'll hit ENOSPC. It'll get rebuilt.
             utils.shwrap("""
+            echo \$(du ${cache_img})
+            echo \$(du ${cache_img} | cut -f1)
             if [ \$(du ${cache_img} | cut -f1) -gt \$((1024*1024*8)) ]; then
                 rm -vf ${cache_img}
             fi
