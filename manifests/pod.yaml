@@ -15,6 +15,7 @@ spec:
      imagePullPolicy: Always
      command: ['/usr/bin/dumb-init']
      args: ['sleep', 'infinity']
+     tty: false
      env:
        # `aws` fails to expand ~/.aws otherwise since we have no home
        - name: AWS_CONFIG_FILE
