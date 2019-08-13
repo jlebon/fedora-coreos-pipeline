@@ -30,6 +30,8 @@ node {
     }
 }
 
+FEDORA_AWS_TESTING_USER_ID = "013116697141"
+
 properties([
     pipelineTriggers([]),
     parameters([
@@ -241,7 +243,8 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
                     coreos-assembler buildextend-aws ${suffix} \
                         --build=${newBuildID} \
                         --region=us-east-1 \
-                        --bucket s3://${s3_bucket}/ami-import
+                        --bucket s3://${s3_bucket}/ami-import \
+                        --grant-user ${FEDORA_AWS_TESTING_USER_ID}
                     """)
                 }
             }
