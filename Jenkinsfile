@@ -185,47 +185,47 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             }
         }
 
-        stage('QEMU Kola Run') {
-            utils.shwrap("""
-            coreos-assembler kola run || :
-            tar -cf - tmp/kola/ | xz -c9 > _kola_temp.tar.xz
-            """)
-            archiveArtifacts "_kola_temp.tar.xz"
-        }
+        //stage('QEMU Kola Run') {
+        //    utils.shwrap("""
+        //    coreos-assembler kola run || :
+        //    tar -cf - tmp/kola/ | xz -c9 > _kola_temp.tar.xz
+        //    """)
+        //    archiveArtifacts "_kola_temp.tar.xz"
+        //}
 
-        // archive the image if the tests failed
-        def report = readJSON file: "tmp/kola/reports/report.json"
-        if (report["result"] != "PASS") {
-            utils.shwrap("coreos-assembler compress --compressor xz")
-            archiveArtifacts "builds/latest/**/*.qcow2.xz"
-            currentBuild.result = 'FAILURE'
-            return
-        }
+        //// archive the image if the tests failed
+        //def report = readJSON file: "tmp/kola/reports/report.json"
+        //if (report["result"] != "PASS") {
+        //    utils.shwrap("coreos-assembler compress --compressor xz")
+        //    archiveArtifacts "builds/latest/**/*.qcow2.xz"
+        //    currentBuild.result = 'FAILURE'
+        //    return
+        //}
 
         if (!params.MINIMAL) {
-            stage('Build Metal') {
-                utils.shwrap("""
-                coreos-assembler buildextend-metal
-                """)
-            }
+            //stage('Build Metal') {
+            //    utils.shwrap("""
+            //    coreos-assembler buildextend-metal
+            //    """)
+            //}
 
-            stage('Build Installer') {
-                utils.shwrap("""
-                coreos-assembler buildextend-installer
-                """)
-            }
+            //stage('Build Installer') {
+            //    utils.shwrap("""
+            //    coreos-assembler buildextend-installer
+            //    """)
+            //}
 
-            stage('Build Openstack') {
-                utils.shwrap("""
-                coreos-assembler buildextend-openstack
-                """)
-            }
+            //stage('Build Openstack') {
+            //    utils.shwrap("""
+            //    coreos-assembler buildextend-openstack
+            //    """)
+            //}
 
-            stage('Build VMware') {
-                utils.shwrap("""
-                coreos-assembler buildextend-vmware
-                """)
-            }
+            //stage('Build VMware') {
+            //    utils.shwrap("""
+            //    coreos-assembler buildextend-vmware
+            //    """)
+            //}
 
             // Key off of s3_stream_dir: i.e. if we're configured to upload artifacts
             // to S3, we also take that to mean we should upload an AMI. We could
