@@ -188,7 +188,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             """)
         }
 
-        if (official && s3_stream_dir && utils.path_exists("/etc/fedora-messaging-cfg/fedmsg.toml")) {
+        if (s3_stream_dir && utils.path_exists("/etc/fedora-messaging-cfg/fedmsg.toml")) {
             stage('Sign OSTree') {
                 utils.shwrap("""
                 export AWS_CONFIG_FILE=\${AWS_FCOS_BUILDS_BOT_CONFIG}
@@ -225,22 +225,22 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             """)
         }
 
-        stage('Kola:QEMU') {
-            utils.shwrap("""
-            coreos-assembler kola run || :
-            tar -cf - tmp/kola/ | xz -c9 > _kola_temp.tar.xz
-            """)
-            archiveArtifacts "_kola_temp.tar.xz"
-        }
+        //stage('Kola:QEMU') {
+        //    utils.shwrap("""
+        //    coreos-assembler kola run || :
+        //    tar -cf - tmp/kola/ | xz -c9 > _kola_temp.tar.xz
+        //    """)
+        //    archiveArtifacts "_kola_temp.tar.xz"
+        //}
 
-        // archive the image if the tests failed
-        def report = readJSON file: "tmp/kola/reports/report.json"
-        if (report["result"] != "PASS") {
-            utils.shwrap("coreos-assembler compress --compressor xz")
-            archiveArtifacts "builds/latest/**/*.qcow2.xz"
-            currentBuild.result = 'FAILURE'
-            return
-        }
+        //// archive the image if the tests failed
+        //def report = readJSON file: "tmp/kola/reports/report.json"
+        //if (report["result"] != "PASS") {
+        //    utils.shwrap("coreos-assembler compress --compressor xz")
+        //    archiveArtifacts "builds/latest/**/*.qcow2.xz"
+        //    currentBuild.result = 'FAILURE'
+        //    return
+        //}
 
         if (!params.MINIMAL) {
             stage('Build Metal') {
@@ -330,7 +330,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             }
         }
 
-        if (official && s3_stream_dir && utils.path_exists("/etc/fedora-messaging-cfg/fedmsg.toml")) {
+        if (s3_stream_dir && utils.path_exists("/etc/fedora-messaging-cfg/fedmsg.toml")) {
             stage('Sign Images') {
                 utils.shwrap("""
                 export AWS_CONFIG_FILE=\${AWS_FCOS_BUILDS_BOT_CONFIG}
