@@ -49,9 +49,10 @@ properties([
              description: 'Override default versioning mechanism',
              defaultValue: '',
              trim: true),
-      booleanParam(name: 'FORCE',
-                   defaultValue: false,
-                   description: 'Whether to force a rebuild'),
+      choice(name: 'FORCE',
+             choices: (['off', 'image', 'full']),
+             defaultValue: 'off',
+             description: 'Whether to force a rebuild'),
       booleanParam(name: 'MINIMAL',
                    defaultValue: (official ? false : true),
                    description: 'Whether to only build the OSTree and qemu images'),
@@ -181,7 +182,12 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
                 parent_version = releases["releases"][-1]["version"]
             }
 
-            def force = params.FORCE ? "--force" : ""
+            def force = ""
+            if (params.FORCE == 'image') {
+                force = "--force-image"
+            } else if (params.FORCE == 'full') {
+                force = "--force"
+            }
             def version = params.VERSION ? "--version ${params.VERSION}" : ""
             utils.shwrap("""
             coreos-assembler build ostree --skip-prune ${force} ${version} ${parent_arg}
