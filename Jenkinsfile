@@ -150,7 +150,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             if (s3_stream_dir) {
                 utils.shwrap("""
                 export AWS_CONFIG_FILE=\${AWS_FCOS_BUILDS_BOT_CONFIG}
-                coreos-assembler buildprep --ostree s3://${s3_stream_dir}/builds
+                coreos-assembler buildprep s3://${s3_stream_dir}/builds
                 """)
                 // also fetch releases.json to get the latest build, but don't error if it doesn't exist
                 utils.aws_s3_cp_allow_noent("s3://${s3_stream_dir}/releases.json", "tmp/releases.json")
