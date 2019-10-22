@@ -134,7 +134,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
         // future, we'll probably want this either part of the cosa image, or
         // in a derivative of cosa for pipeline needs.
         utils.shwrap("""
-        git clone https://github.com/coreos/fedora-coreos-releng-automation /var/tmp/fcos-releng
+        git clone -b pr/versionary https://github.com/jlebon/fedora-coreos-releng-automation /var/tmp/fcos-releng
         """)
 
         // this is defined IFF we *should* and we *can* upload to S3
@@ -202,9 +202,9 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
                 """)
             }
 
-            utils.shwrap("""
-            coreos-assembler fetch
-            """)
+            //utils.shwrap("""
+            //coreos-assembler fetch
+            //""")
         }
 
         def prevBuildID = null
@@ -228,14 +228,17 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod, defaultCon
             def version
             if (params.VERSION) {
                 version = "--version ${params.VERSION}"
-            } else if (official) {
+            } else {
                 def new_version = utils.shwrap_capture("/var/tmp/fcos-releng/scripts/versionary.py")
                 version = "--version ${new_version}"
             }
             utils.shwrap("""
-            coreos-assembler build ostree --skip-prune ${force} ${version} ${parent_arg}
+            echo coreos-assembler build ostree --skip-prune ${force} ${version} ${parent_arg}
             """)
         }
+
+        currentBuild.result = 'SUCCESS'
+        return
 
         def newBuildID = utils.shwrap_capture("readlink builds/latest")
         if (prevBuildID == newBuildID) {
