@@ -270,24 +270,24 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod) {
             """)
         }
 
-        stage('Kola:QEMU') {
-            // leave 512M for overhead; VMs are 1G each
-            def parallel = ((cosa_memory_request_mb - 512) / 1024) as Integer
-            utils.shwrap("""
-            coreos-assembler kola run -- --parallel ${parallel} || :
-            tar -cf - tmp/kola/ | xz -c9 > _kola_temp.tar.xz
-            """)
-            archiveArtifacts "_kola_temp.tar.xz"
-        }
+        //stage('Kola:QEMU') {
+        //    // leave 512M for overhead; VMs are 1G each
+        //    def parallel = ((cosa_memory_request_mb - 512) / 1024) as Integer
+        //    utils.shwrap("""
+        //    coreos-assembler kola run -- --parallel ${parallel} || :
+        //    tar -cf - tmp/kola/ | xz -c9 > _kola_temp.tar.xz
+        //    """)
+        //    archiveArtifacts "_kola_temp.tar.xz"
+        //}
 
-        // archive the image if the tests failed
-        def report = readJSON file: "tmp/kola/reports/report.json"
-        if (report["result"] != "PASS") {
-            utils.shwrap("coreos-assembler compress --compressor xz")
-            archiveArtifacts "builds/latest/**/*.qcow2.xz"
-            currentBuild.result = 'FAILURE'
-            return
-        }
+        //// archive the image if the tests failed
+        //def report = readJSON file: "tmp/kola/reports/report.json"
+        //if (report["result"] != "PASS") {
+        //    utils.shwrap("coreos-assembler compress --compressor xz")
+        //    archiveArtifacts "builds/latest/**/*.qcow2.xz"
+        //    currentBuild.result = 'FAILURE'
+        //    return
+        //}
 
         if (!params.MINIMAL) {
             stage('Build Metal') {
@@ -361,90 +361,90 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod) {
             }
         }
 
-        stage('Archive') {
-            // lower to make sure we don't go over and account for overhead
-            def xz_memlimit = cosa_memory_request_mb - 512
-            utils.shwrap("""
-            export XZ_DEFAULTS=--memlimit=${xz_memlimit}Mi
-            coreos-assembler compress --compressor xz
-            """)
+        //stage('Archive') {
+        //    // lower to make sure we don't go over and account for overhead
+        //    def xz_memlimit = cosa_memory_request_mb - 512
+        //    utils.shwrap("""
+        //    export XZ_DEFAULTS=--memlimit=${xz_memlimit}Mi
+        //    coreos-assembler compress --compressor xz
+        //    """)
 
-            // Run the coreos-meta-translator against the most recent build,
-            // which will generate a release.json from the meta.json files
-            utils.shwrap("""
-            git clone https://github.com/coreos/fedora-coreos-releng-automation /var/tmp/fcos-releng
-            /var/tmp/fcos-releng/coreos-meta-translator/trans.py --workdir .
-            """)
+        //    // Run the coreos-meta-translator against the most recent build,
+        //    // which will generate a release.json from the meta.json files
+        //    utils.shwrap("""
+        //    git clone https://github.com/coreos/fedora-coreos-releng-automation /var/tmp/fcos-releng
+        //    /var/tmp/fcos-releng/coreos-meta-translator/trans.py --workdir .
+        //    """)
 
-            if (s3_stream_dir) {
-              // just upload as public-read for now, but see discussions in
-              // https://github.com/coreos/fedora-coreos-tracker/issues/189
-              utils.shwrap("""
-              export AWS_CONFIG_FILE=\${AWS_FCOS_BUILDS_BOT_CONFIG}
-              coreos-assembler buildupload s3 --acl=public-read ${s3_stream_dir}/builds
-              """)
-            } else if (!official) {
-              // In devel mode without an S3 server, just archive into the PVC
-              // itself. Otherwise there'd be no other way to retrieve the
-              // artifacts. But note we only keep one build at a time.
-              utils.shwrap("""
-              rm -rf ${developer_builddir}
-              mkdir -p ${developer_builddir}
-              cp -aT builds ${developer_builddir}
-              """)
-            }
-        }
+        //    if (s3_stream_dir) {
+        //      // just upload as public-read for now, but see discussions in
+        //      // https://github.com/coreos/fedora-coreos-tracker/issues/189
+        //      utils.shwrap("""
+        //      export AWS_CONFIG_FILE=\${AWS_FCOS_BUILDS_BOT_CONFIG}
+        //      coreos-assembler buildupload s3 --acl=public-read ${s3_stream_dir}/builds
+        //      """)
+        //    } else if (!official) {
+        //      // In devel mode without an S3 server, just archive into the PVC
+        //      // itself. Otherwise there'd be no other way to retrieve the
+        //      // artifacts. But note we only keep one build at a time.
+        //      utils.shwrap("""
+        //      rm -rf ${developer_builddir}
+        //      mkdir -p ${developer_builddir}
+        //      cp -aT builds ${developer_builddir}
+        //      """)
+        //    }
+        //}
 
-        if (official && s3_stream_dir && utils.path_exists("/etc/fedora-messaging-cfg/fedmsg.toml")) {
-            stage('Sign Images') {
-                utils.shwrap("""
-                export AWS_CONFIG_FILE=\${AWS_FCOS_BUILDS_BOT_CONFIG}
-                cosa sign robosignatory --s3 ${s3_stream_dir}/builds \
-                    --extra-fedmsg-keys stream=${params.STREAM} \
-                    --images --gpgkeypath /etc/pki/rpm-gpg \
-                    --fedmsg-conf /etc/fedora-messaging-cfg/fedmsg.toml
-                """)
-            }
-        }
+        //if (official && s3_stream_dir && utils.path_exists("/etc/fedora-messaging-cfg/fedmsg.toml")) {
+        //    stage('Sign Images') {
+        //        utils.shwrap("""
+        //        export AWS_CONFIG_FILE=\${AWS_FCOS_BUILDS_BOT_CONFIG}
+        //        cosa sign robosignatory --s3 ${s3_stream_dir}/builds \
+        //            --extra-fedmsg-keys stream=${params.STREAM} \
+        //            --images --gpgkeypath /etc/pki/rpm-gpg \
+        //            --fedmsg-conf /etc/fedora-messaging-cfg/fedmsg.toml
+        //        """)
+        //    }
+        //}
 
-        // Now that the metadata is uploaded go ahead and kick off some tests
-        if (!params.MINIMAL && s3_stream_dir &&
-                utils.path_exists("\${AWS_FCOS_KOLA_BOT_CONFIG}")) {
-            stage('Kola:AWS') {
-                // use jnlp container in our pod, which has `oc` in it already
-                container('jnlp') {
-                    utils.shwrap("""
-                        # We consider the AWS kola tests to be a followup job
-                        # so we aren't adding a `--wait` here.
-                        oc start-build fedora-coreos-pipeline-kola-aws \
-                            -e STREAM=${params.STREAM} \
-                            -e VERSION=${newBuildID} \
-                            -e S3_STREAM_DIR=${s3_stream_dir}
-                    """)
-                }
-            }
-        }
+        //// Now that the metadata is uploaded go ahead and kick off some tests
+        //if (!params.MINIMAL && s3_stream_dir &&
+        //        utils.path_exists("\${AWS_FCOS_KOLA_BOT_CONFIG}")) {
+        //    stage('Kola:AWS') {
+        //        // use jnlp container in our pod, which has `oc` in it already
+        //        container('jnlp') {
+        //            utils.shwrap("""
+        //                # We consider the AWS kola tests to be a followup job
+        //                # so we aren't adding a `--wait` here.
+        //                oc start-build fedora-coreos-pipeline-kola-aws \
+        //                    -e STREAM=${params.STREAM} \
+        //                    -e VERSION=${newBuildID} \
+        //                    -e S3_STREAM_DIR=${s3_stream_dir}
+        //            """)
+        //        }
+        //    }
+        //}
 
-        // For now, we auto-release all non-production streams builds. That
-        // way, we can e.g. test testing-devel AMIs easily.
-        //
-        // Since we are only running this stage for non-production (i.e. mechanical
-        // and development) builds we'll default to not doing AWS AMI replication.
-        // That can be overridden by the user setting the AWS_REPLICATION parameter
-        // to true, overriding the default (false).
-        if (official && !(params.STREAM in streams.production)) {
-            stage('Publish') {
-                // use jnlp container in our pod, which has `oc` in it already
-                container('jnlp') {
-                    utils.shwrap("""
-                    oc start-build --wait fedora-coreos-pipeline-release \
-                        -e STREAM=${params.STREAM} \
-                        -e VERSION=${newBuildID} \
-                        -e AWS_REPLICATION=${params.AWS_REPLICATION}
-                    """)
-                }
-            }
-        }
+        //// For now, we auto-release all non-production streams builds. That
+        //// way, we can e.g. test testing-devel AMIs easily.
+        ////
+        //// Since we are only running this stage for non-production (i.e. mechanical
+        //// and development) builds we'll default to not doing AWS AMI replication.
+        //// That can be overridden by the user setting the AWS_REPLICATION parameter
+        //// to true, overriding the default (false).
+        //if (official && !(params.STREAM in streams.production)) {
+        //    stage('Publish') {
+        //        // use jnlp container in our pod, which has `oc` in it already
+        //        container('jnlp') {
+        //            utils.shwrap("""
+        //            oc start-build --wait fedora-coreos-pipeline-release \
+        //                -e STREAM=${params.STREAM} \
+        //                -e VERSION=${newBuildID} \
+        //                -e AWS_REPLICATION=${params.AWS_REPLICATION}
+        //            """)
+        //        }
+        //    }
+        //}
 
         // main try {} finishes here
         } catch (e) {
@@ -471,9 +471,7 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod) {
             }
 
             try {
-                if (official) {
                     slackSend(color: color, message: message)
-                }
             } finally {
                 echo message
             }
