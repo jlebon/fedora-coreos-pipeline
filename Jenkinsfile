@@ -446,6 +446,8 @@ podTemplate(cloud: 'openshift', label: 'coreos-assembler', yaml: pod) {
         //    }
         //}
 
+        currentBuild.result = 'SUCCESS'
+
         // main try {} finishes here
         } catch (e) {
             currentBuild.result = 'FAILURE'
