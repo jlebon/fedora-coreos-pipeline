@@ -15,10 +15,10 @@ metadata:
     tags: fcos,jenkins,fedora
   name: fedora-coreos-jenkins-s2i
 parameters:
-  - description: Git source URI for pipeline Jenkinsfile
+  - description: Git source URI for Jenkins config
     name: PIPELINE_REPO_URL
     value: https://github.com/coreos/fedora-coreos-pipeline
-  - description: Git branch/tag reference for pipeline Jenkinsfile
+  - description: Git branch/tag reference for Jenkins config
     name: PIPELINE_REPO_REF
     value: master
 
@@ -50,7 +50,7 @@ objects:
   - kind: BuildConfig
     apiVersion: v1
     metadata:
-      name: fedora-coreos-jenkins
+      name: jenkins
       annotations:
         coreos.com/deploy-default: "true"
     # Note no triggers: we don't want e.g. git pushes/config changes to restart
@@ -99,4 +99,3 @@ objects:
             name: docker.io/openshift/jenkins-slave-base-centos7:latest
           importPolicy:
             scheduled: true
-
