@@ -1,3 +1,4 @@
 github-oauth:0.33
 configuration-as-code:1.33
 slack:2.34
+job-dsl:1.76
