@@ -136,7 +136,8 @@ def process_template(args):
     if not args.official:
         params['DEVELOPER_PREFIX'] = args.prefix
     if args.pipeline:
-        params.update(params_from_git_refspec(args.pipeline, 'JENKINS_REPO'))
+        params.update(params_from_git_refspec(args.pipeline, 'JENKINS_S2I_REPO'))
+        params.update(params_from_git_refspec(args.pipeline, 'JENKINS_JOBS_REPO'))
     if args.config:
         params.update(params_from_git_refspec(args.config, 'FCOS_CONFIG'))
     if args.bucket:
