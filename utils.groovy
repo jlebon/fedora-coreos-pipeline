@@ -27,15 +27,18 @@ def shwrap_rc(cmds) {
     """)
 }
 
+def get_annotation(bc, anno) {
+    def annopath = "{.metadata.annotations.coreos\\\\.com/${anno}}"
+    return shwrap_capture(
+      "oc get buildconfig ${bc} -o=jsonpath=${annopath}")
+}
+
 def get_pipeline_annotation(anno) {
     // should probably cache this, but meh... I'd rather
     // hide this goop here than in the main pipeline code
     def split = env.JOB_NAME.split('/')
-    def namespace = split[0]
     def bc = split[1][namespace.length()+1..-1]
-    def annopath = "{.metadata.annotations.coreos\\\\.com/${anno}}"
-    return shwrap_capture(
-      "oc get buildconfig ${bc} -n ${namespace} -o=jsonpath=${annopath}")
+    return get_annotation(bc, anno)
 }
 
 // This is like fileExists, but actually works inside the Kubernetes container.

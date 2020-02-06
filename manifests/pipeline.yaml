@@ -15,20 +15,20 @@ metadata:
     tags: fcos,jenkins,fedora
   name: fedora-coreos
 parameters:
-  - description: Git source URI for pipeline Jenkinsfile
-    name: PIPELINE_REPO_URL
+  - description: Git source URI for Jenkins configs and jobs
+    name: JENKINS_REPO_URL
     value: https://github.com/coreos/fedora-coreos-pipeline
-  - description: Git branch/tag reference for pipeline Jenkinsfile
-    name: PIPELINE_REPO_REF
+  - description: Git branch/tag reference for Jenkins configs and jobs
+    name: JENKINS_REPO_REF
     value: master
   - description: Prefix to prepend to resources
     name: DEVELOPER_PREFIX
     value:
   - description: Git source URI for FCOS config
-    name: PIPELINE_FCOS_CONFIG_URL
+    name: FCOS_CONFIG_URL
     value: https://github.com/coreos/fedora-coreos-config
   - description: Git branch/tag reference for FCOS config
-    name: PIPELINE_FCOS_CONFIG_REF
+    name: FCOS_CONFIG_REF
     value: # empty -> based on stream
   - description: Size of the PVC to create
     name: PVC_SIZE
@@ -44,42 +44,8 @@ parameters:
   - description: Whether to use KVM device plugin or legacy OCI KVM hook
     name: KVM_SELECTOR
     value: legacy-oci-kvm-hook
-  - description: Slack domain on which to post build status updates
-    name: SLACK_DOMAIN
-    value: coreos
-  - description: Slack channel on which to post build status updates
-    name: SLACK_CHANNEL
-    value: jenkins-coreos
 
 objects:
-
-  ### JENKINS CONFIGURATION ###
-
-  # this uses the configuration-as-code plugin:
-  # https://github.com/jenkinsci/configuration-as-code-plugin
-  # we might split this out as a proper YAML file in the future
-  - apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: jenkins-casc-cfg
-      annotations:
-        coreos.com/deploy-default: "true"
-    data:
-      jenkins.yaml: |
-          credentials:
-            system:
-              domainCredentials:
-                - credentials:
-                  - string:
-                      scope: GLOBAL
-                      id: slack-token
-                      secret: ${slack-api-token/token}
-                      description: Slack API token
-          unclassified:
-            slackNotifier:
-              teamDomain: ${SLACK_DOMAIN}
-              tokenCredentialId: slack-token
-              room: "#${SLACK_CHANNEL}"
 
   ### COREOS-ASSEMBLER ###
 
@@ -132,8 +98,8 @@ objects:
       # https://docs.okd.io/latest/dev_guide/builds/build_strategies.html#mapping-buildconfig-jenkins
       annotations:
         coreos.com/deploy-default: "true"
-        coreos.com/source-config-url: ${PIPELINE_FCOS_CONFIG_URL}
-        coreos.com/source-config-ref: ${PIPELINE_FCOS_CONFIG_REF}
+        coreos.com/source-config-url: ${FCOS_CONFIG_URL}
+        coreos.com/source-config-ref: ${FCOS_CONFIG_REF}
         coreos.com/developer-prefix: ${DEVELOPER_PREFIX}
         coreos.com/s3-bucket: ${S3_BUCKET}
         coreos.com/kvm-selector: ${KVM_SELECTOR}
@@ -143,8 +109,8 @@ objects:
       source:
         type: Git
         git:
-          uri: ${PIPELINE_REPO_URL}
-          ref: ${PIPELINE_REPO_REF}
+          uri: ${JENKINS_REPO_URL}
+          ref: ${JENKINS_REPO_REF}
       runPolicy: Parallel
       strategy:
         jenkinsPipelineStrategy:
@@ -165,8 +131,8 @@ objects:
       source:
         type: Git
         git:
-          uri: ${PIPELINE_REPO_URL}
-          ref: ${PIPELINE_REPO_REF}
+          uri: ${JENKINS_REPO_URL}
+          ref: ${JENKINS_REPO_REF}
       strategy:
         jenkinsPipelineStrategy:
           type: JenkinsPipeline
@@ -191,8 +157,8 @@ objects:
       source:
         type: Git
         git:
-          uri: ${PIPELINE_REPO_URL}
-          ref: ${PIPELINE_REPO_REF}
+          uri: ${JENKINS_REPO_URL}
+          ref: ${JENKINS_REPO_REF}
       strategy:
         jenkinsPipelineStrategy:
           type: JenkinsPipeline
@@ -222,8 +188,8 @@ objects:
       source:
         type: Git
         git:
-          uri: ${PIPELINE_REPO_URL}
-          ref: ${PIPELINE_REPO_REF}
+          uri: ${JENKINS_REPO_URL}
+          ref: ${JENKINS_REPO_REF}
       strategy:
         jenkinsPipelineStrategy:
           type: JenkinsPipeline
@@ -242,8 +208,8 @@ objects:
       source:
         type: Git
         git:
-          uri: ${PIPELINE_REPO_URL}
-          ref: ${PIPELINE_REPO_REF}
+          uri: ${JENKINS_REPO_URL}
+          ref: ${JENKINS_REPO_REF}
       strategy:
         jenkinsPipelineStrategy:
           type: JenkinsPipeline
@@ -266,8 +232,8 @@ objects:
       source:
         type: Git
         git:
-          uri: ${PIPELINE_REPO_URL}
-          ref: ${PIPELINE_REPO_REF}
+          uri: ${JENKINS_REPO_URL}
+          ref: ${JENKINS_REPO_REF}
       strategy:
         jenkinsPipelineStrategy:
           type: JenkinsPipeline
@@ -285,8 +251,8 @@ objects:
       source:
         type: Git
         git:
-          uri: ${PIPELINE_REPO_URL}
-          ref: ${PIPELINE_REPO_REF}
+          uri: ${JENKINS_REPO_URL}
+          ref: ${JENKINS_REPO_REF}
       strategy:
         jenkinsPipelineStrategy:
           type: JenkinsPipeline

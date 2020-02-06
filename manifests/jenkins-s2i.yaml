@@ -16,10 +16,10 @@ metadata:
   name: fedora-coreos-jenkins-s2i
 parameters:
   - description: Git source URI for Jenkins config
-    name: PIPELINE_REPO_URL
+    name: JENKINS_REPO_URL
     value: https://github.com/coreos/fedora-coreos-pipeline
   - description: Git branch/tag reference for Jenkins config
-    name: PIPELINE_REPO_REF
+    name: JENKINS_REPO_REF
     value: master
 
 objects:
@@ -53,6 +53,8 @@ objects:
       name: jenkins
       annotations:
         coreos.com/deploy-default: "true"
+        coreos.com/jenkins-repo-url: ${JENKINS_REPO_URL}
+        coreos.com/jenkins-repo-ref: ${JENKINS_REPO_REF}
     # Note no triggers: we don't want e.g. git pushes/config changes to restart
     # Jenkins. Let's just require manual restarts here. XXX: Should investigate
     # if there's an easy way to auto-redeploy during downtimes.
@@ -60,8 +62,8 @@ objects:
       source:
         type: Git
         git:
-          uri: ${PIPELINE_REPO_URL}
-          ref: ${PIPELINE_REPO_REF}
+          uri: ${JENKINS_REPO_URL}
+          ref: ${JENKINS_REPO_REF}
         contextDir: jenkins/master
       strategy:
         type: Source
