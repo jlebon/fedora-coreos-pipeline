@@ -31,12 +31,6 @@ def shwrap_rc(cmds) {
 
 def get_annotation(bc, anno) {
     def bcYaml = readYaml(text: shwrap_capture("oc get buildconfig ${bc} -n ${env.PROJECT_NAME} -o yaml"))
-    println(bcYaml['metadata'])
-    println()
-    println(bcYaml['metadata']['annotations'])
-    println()
-    println(bcYaml['metadata']['annotations']["coreos.com/${anno}"])
-    println()
     return bcYaml['metadata']['annotations']["coreos.com/${anno}"]
 }
 
