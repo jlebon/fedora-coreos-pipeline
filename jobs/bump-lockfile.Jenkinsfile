@@ -1,11 +1,10 @@
 @Library('github.com/coreos/coreos-ci-lib@master') _
 
-repo = "coreos/fedora-coreos-config"
+repo = "jlebon/fedora-coreos-config"
 branches = [
-    "testing-devel",
-    "next-devel"
+    "testing-devel"
 ]
-botCreds = "github-coreosbot-token"
+botCreds = "github-papr-bot-token"
 
 properties([
     pipelineTriggers([
