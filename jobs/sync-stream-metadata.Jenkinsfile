@@ -14,7 +14,7 @@ cosaPod {
         shwrap("""
             aws s3 sync --acl public-read --cache-control 'max-age=60' \
                 --exclude '*' --include 'streams/*' --include 'updates/*' \
-                    ./ s3://fcos-builds
+                    ./ s3://fcos-builds/devel/jlebon
         """)
     }
 }
