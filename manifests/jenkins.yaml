@@ -33,16 +33,6 @@ objects:
       kind: Service
       name: ${JENKINS_SERVICE_NAME}
 - apiVersion: v1
-  kind: PersistentVolumeClaim
-  metadata:
-    name: ${JENKINS_SERVICE_NAME}
-  spec:
-    accessModes:
-    - ReadWriteOnce
-    resources:
-      requests:
-        storage: ${VOLUME_CAPACITY}
-- apiVersion: v1
   kind: DeploymentConfig
   metadata:
     annotations:
@@ -119,9 +109,9 @@ objects:
         restartPolicy: Always
         serviceAccountName: ${JENKINS_SERVICE_NAME}
         volumes:
-        - name: ${JENKINS_SERVICE_NAME}-data
-          persistentVolumeClaim:
-            claimName: ${JENKINS_SERVICE_NAME}
+        - emptyDir:
+            medium: ""
+          name: ${JENKINS_SERVICE_NAME}-data
         # DELTA: add a configmap -- it's defined in pipeline.yaml
         - name: ${JENKINS_SERVICE_NAME}-casc-cfg
           configMap:
@@ -220,12 +210,6 @@ parameters:
   displayName: Memory Limit
   # DELTA: changed from 512Mi
   name: MEMORY_LIMIT
-  value: 2Gi
-- description: Volume space available for data, e.g. 512Mi, 2Gi.
-  displayName: Volume Capacity
-  name: VOLUME_CAPACITY
-  required: true
-  # DELTA: changed from 1Gi
   value: 2Gi
 - description: The OpenShift Namespace where the Jenkins ImageStream resides.
   displayName: Jenkins ImageStream Namespace
