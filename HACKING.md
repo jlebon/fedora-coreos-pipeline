@@ -14,8 +14,8 @@ easier. It will set up a Jenkins pipeline job which uses the
 [Kubernetes Jenkins plugin](https://github.com/jenkinsci/kubernetes-plugin).
 
 In the following sections, the section header may indicate whether the
-section applies to the local cluster case (`[LOCAL]`) or the official
-prod case (`[PROD]`).
+section applies only to the local cluster case (`[LOCAL]`) or the
+official prod case (`[PROD]`).
 
 You'll want to be sure you have kubevirt available in your cluster.  See
 [this section of the coreos-assembler docs](https://github.com/coreos/coreos-assembler/blob/master/README.md#getting-started---prerequisites).
@@ -30,122 +30,13 @@ up wanting that.
 
 ### [LOCAL] Set up an OpenShift cluster
 
-If you're using `oc cluster up` (which is an older OpenShift with Docker)
-the easiest is to install `oci-kvm-hook` on your host system (not in a
-pet container).  NOTE: The production path for this in modern clusters is
-the [KVM device plugin](https://github.com/kubevirt/kubernetes-device-plugins/blob/master/docs/README.kvm.md)
-linked in the `[PROD]` docs.
+We may rework this section to use CodeReady Containers in the future.
+For now, you can use the OpenShift installer directly to create a full
+cluster either in libvirt or GCP (for nested virt). For more details,
+see:
 
-```
-rpm-ostree install oci-kvm-hook # if on OSTree-based system
-yum -y install oci-kvm-hook # if on traditional
-```
-
-We will use `oc cluster up` to set up a local cluster for testing. To do
-this, obtain the OpenShift v3.6.1 binary from
-[here](https://github.com/openshift/origin/releases/tag/v3.6.1). We want
-to match the OCP version running in CentOS CI.
-
-`openshift-origin-client-tools` is enough for `oc cluster up`.
-
-If you have not done so already, follow the instructions in the
-[Prerequisites](https://github.com/openshift/origin/blob/v4.0.0-alpha.0/docs/cluster_up_down.md#prerequisites)
-and [Getting Started](https://github.com/openshift/origin/blob/v4.0.0-alpha.0/docs/cluster_up_down.md#getting-started)
-sections to set up your environment and start the Docker daemon.
-
-If on Fedora > 28 and Openshift OKD < 3.11, the
-`/usr/lib/systemd/system/docker.service` unit file needs
-overriding to use the `cgroupfs` cgroup driver instead
-of `systemd`. (See https://bugzilla.redhat.com/show_bug.cgi?id=1558425#c22
-for more info). Add the override as follows:
-
-```
-systemctl edit --full docker.service
-```
-
-Change the following line (under `ExecStart`) from:
-
-```
---exec-opt native.cgroupdriver=systemd \
-```
-
-to:
-
-```
---exec-opt native.cgroupdriver=cgroupfs \
-```
-
-Restart the docker daemon for the override
-to take effect:
-
-```
-systemctl restart docker.service
-```
-
-And now, bring up a v3.6.1 cluster (again, to match CentOS CI):
-
-```
-oc cluster up --version v3.6.1
-```
-
-Note that `oc cluster up/down` will require running as root, to
-communicate with the docker daemon. However, the other steps in
-this guide can (and should) be run as non-root.
-
-To have persistent configs and data, I would recommend specifying the
-dirs to use.
-
-```
-oc cluster up --version v3.6.1 \
-    --host-config-dir=/srv/oc/config \
-    --host-data-dir=/srv/oc/data \
-    --host-pv-dir=/srv/oc/pv
-```
-
-Then when doing `oc cluster up` in the future, you can use
-`--use-existing-config`:
-
-```
-oc cluster up --version v3.6.1 \
-    --host-config-dir=/srv/oc/config \
-    --host-data-dir=/srv/oc/data \
-    --host-pv-dir=/srv/oc/pv \
-    --use-existing-config
-```
-
-Once complete, something like the
-following will show:
-
-```
-OpenShift server started.
-
-The server is accessible via web console at:
-    https://127.0.0.1:8443
-
-You are logged in as:
-    User:     developer
-    Password: <any value>
-
-To login as administrator:
-    oc login -u system:admin
-```
-
-Once the cluster is up, we need to mark our only node (`localhost`) as
-oci-kvm-hook enabled. To do this:
-
-```
-oc login -u system:admin
-oc patch node localhost -p '{"metadata":{"labels":{"oci_kvm_hook":"allowed"}}}'
-```
-
-You can now sign in as as `developer`:
-
-```
-oc login -u developer https://127.0.0.1:8443
-```
-
-(Any password will work). The IP address to log in here may differ
-according to the output from `oc cluster up`.
+https://github.com/openshift/installer/tree/master/docs/dev/libvirt
+https://github.com/coreos/coreos-assembler/blob/master/doc/openshift-gcp-nested-virt.md
 
 Ideally you will match the project name used for prod in CentOS CI
 (`fedora-coreos`), but feel free to use a different project name
