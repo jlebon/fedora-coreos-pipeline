@@ -193,6 +193,12 @@ lock(resource: "build-${params.STREAM}") {
                 rm -vf ${cache_img}
             fi
             """)
+
+            // XXX: hack until https://github.com/coreos/coreos-assembler/pull/3036
+            shwrap("""
+            git clone --depth 1 https://gitlab.cee.redhat.com/coreos/redhat-coreos src/extrepos
+            cp -t src/config src/extrepos/{*.repo,content_sets*.yaml}
+            """)
         }
 
         // Determine parent version/commit information
