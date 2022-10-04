@@ -101,7 +101,7 @@ def process_template(args):
     if args.cosa_img:
         params['COREOS_ASSEMBLER_IMAGE'] = args.cosa_img
     if has_additional_root_ca(args):
-        params['JENKINS_AGENT_IMAGE_TAG'] = "derived"
+        params['JENKINS_AGENT_BASE_TAG'] = "base"
         templates += ['jenkins-agent.yaml']
 
     print("Parameters:")
