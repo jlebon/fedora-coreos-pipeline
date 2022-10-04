@@ -25,7 +25,7 @@ source_config:
   url: https://github.com/coreos/fedora-coreos-config
 
 # remove to disable S3 uploads
-s3_bucket: fcos-builds
+#s3_bucket: fcos-builds
 
 registry_repos:
   oscontainer: quay.io/fedora/fedora-coreos
