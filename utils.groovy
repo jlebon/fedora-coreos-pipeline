@@ -282,4 +282,12 @@ def get_artifacts_to_build(pipecfg, stream, basearch) {
     }
     return artifacts.unique()
 }
+
+def get_registry_repos(pipecfg, stream) {
+    def registry_repos = pipecfg.registry_repos ?: [:]
+    // merge top-level registry_repos with stream-specific bits
+    registry_repos += pipecfg.streams[stream].additional_registry_repos ?: [:]
+    return registry_repos
+}
+
 return this
