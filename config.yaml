@@ -1,87 +1,20 @@
 streams:
-    stable:
-      type: production
-    testing:
-      type: production
-    next:
-      type: production
     testing-devel:
       type: development
       default: true
-    next-devel:         # do not touch; line managed by `next-devel/manage.py`
-      type: development # do not touch; line managed by `next-devel/manage.py`
-    rawhide:
-      type: mechanical
-    # branched:
-    #  type: mechanical
-    # bodhi-updates:
-    #   type: mechanical
-    # bodhi-updates-testing:
-    #   type: mechanical
 
-additional_arches: [aarch64, ppc64le, s390x]
+additional_arches: []
 
 source_config:
   url: https://github.com/coreos/fedora-coreos-config
 
 # remove to disable S3 uploads
-s3_bucket: fcos-builds
+s3_bucket: rhcos-jlebon
 
 registry_repos:
-  oscontainer: quay.io/fedora/fedora-coreos
-  # For a period of time let's also mirror into the old location too
-  # Drop this after October 2022. See
-  # https://discussion.fedoraproject.org/t/updated-registry-location-for-fedora-coreos-ostree-native-container/42740
-  oscontainer_old: quay.io/coreos-assembler/fcos
+  oscontainer: quay.io/jlebon/fedora-coreos
+  oscontainer_old: quay.io/jlebon/fedora-coreos-2
 
 default_artifacts:
-  aarch64:
-    - azure
-    - openstack
-    - live
-    - metal
-    - metal4k
-  ppc64le:
-    - openstack
-    - powervs
-    - live
-    - metal
-    - metal4k
-  s390x:
-    - ibmcloud
-    - openstack
-    - live
-    - metal
-    - metal4k
   x86_64:
-    - aliyun
-    - aws
-    - azure
-    - azurestack
-    - digitalocean
-    - exoscale
-    - gcp
-    - ibmcloud
-    - live
-    - nutanix
-    - metal
-    - metal4k
-    - openstack
-    - virtualbox
-    - vmware
-    - vultr
-
-# Temporary hack for AWS aarch64; see comment in `build-arch.Jenkinsfile`.
-aws_aarch64_serial_console_hack: true
-
-clouds:
-  aws:
-    # Accounts to share newly created AMIs with
-    test_accounts:
-      - "013116697141"
-  azure:
-    test_resource_group: fedora-coreos-testing
-    test_storage_account: fedoracoreostesting
-    test_storage_container: fedora-coreos-testing-image-blobs
-  gcp:
-    bucket: fedora-coreos-cloud-image-uploads
+    - qemu
