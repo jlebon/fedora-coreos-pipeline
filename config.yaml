@@ -35,11 +35,6 @@ registry_repos:
   oscontainer_old: quay.io/coreos-assembler/fcos
 
 default_artifacts:
-  all:
-    - metal
-    - metal4k
-    - live
-    - openstack
   aarch64:
     - azure
   ppc64le:
