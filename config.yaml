@@ -1,6 +1,8 @@
 streams:
     stable:
       type: production
+      cosa_img: quay.io/coreos-assembler/coreos-assembler:rhcos-4.11
+      cosa_controller_img_hack: quay.io/coreos-assembler/coreos-assembler:v37.20221015.1.0
     testing:
       type: production
     next:
@@ -20,6 +22,8 @@ streams:
     #   type: mechanical
 
 additional_arches: [aarch64, ppc64le, s390x]
+
+cosa_img: quay.io/coreos-assembler/coreos-assembler:latest
 
 source_config:
   url: https://github.com/coreos/fedora-coreos-config
