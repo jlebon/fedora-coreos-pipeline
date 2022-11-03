@@ -4,6 +4,16 @@ import org.yaml.snakeyaml.Yaml
 // Only add pipeline-specific things here. Otherwise add to coreos-ci-lib
 // instead.
 
+// map of Jenkins URL to (S3 bucket prefix, hotfix allowed)
+PROTECTED_JENKINSES = [
+    'https://jenkins-fedora-coreos-pipeline.apps.ocp.fedoraproject.org/':
+        ['fcos-builds/prod/streams/${STREAM}', false],
+    'https://jenkins-rhcos.apps.ocp-virt.prod.psi.redhat.com/':
+        ['rhcos-ci/prod/streams/${STREAM}', true],
+    'https://jenkins-rhcos-art.apps.ocp-virt.prod.psi.redhat.com/':
+        ['art-rhcos-ci/prod/streams/${STREAM}', true]
+]
+
 def load_jenkins_config() {
     return readJSON(text: shwrapCapture("""
         oc get configmap -n ${env.PROJECT_NAME} -o json jenkins-config | jq .data
@@ -29,7 +39,34 @@ def load_pipecfg() {
         ])
         pipecfg = readYaml(file: "pipecfg/config.yaml")
     }
+    validate_pipecfg(pipecfg)
     return pipecfg
+}
+
+def validate_pipecfg(pipecfg) {
+    if (env.JENKINS_URL in PROTECTED_JENKINSES) {
+        // We're running on a protected Jenkins instance. Check the hotfix
+        // build policy and that S3 buckets are as expected.
+        def (bucket_prefix, allow_hotfixes) = PROTECTED_JENKINSES[env.JENKINS_URL]
+        if (pipecfg.hotfix && !allow_hotfixes) {
+            error("Hotfix builds are not allowed on ${env.JENKINS_URL}")
+        }
+        if (pipecfg.s3_bucket && bucket_prefix != pipecfg.s3_bucket) {
+            error("S3 bucket on ${env.JENKINS_URL} must be ${bucket_prefix} (found ${pipecfg.s3_bucket})")
+        }
+    } else if (AWSBuildUploadCredentialExists()) {
+        // We're *not* running on a protected Jenkins instance and we have AWS
+        // creds available. Check that we're not trying to push to a protected
+        // S3 bucket.
+        def protected_buckets = PROTECTED_JENKINSES.collectEntries{jenkins_url, v ->
+            def (bucket_prefix, allow_hotfixes) = v
+            [splitBucketKey(bucket_prefix)[0], jenkins_url]
+        }
+        def target_bucket = splitBucketKey(pipecfg.s3_bucket)[0]
+        if (target_bucket in protected_buckets) {
+            error("S3 bucket ${target_bucket} can only be used on ${protected_buckets[target_bucket]}")
+        }
+    }
 }
 
 def get_source_config_ref_for_stream(pipecfg, stream) {
