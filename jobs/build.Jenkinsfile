@@ -302,46 +302,46 @@ lock(resource: "build-${params.STREAM}") {
                  skipSecureBoot: pipecfg.hotfix?.skip_secureboot_tests_hack)
         }
 
-        // If we are uploading results then let's do an early archive
-        // of just the OSTree. This has the desired side effect of
-        // reserving our build ID before we fork off multi-arch builds.
-        stage('Archive OSTree') {
-            if (uploading) {
-                // run with --force here in case the previous run of the
-                // pipeline died in between buildupload and bump_builds_json()
-                pipeutils.shwrapWithAWSBuildUploadCredentials("""
-                cosa buildupload --force --skip-builds-json --artifact=ostree \
-                    s3 --aws-config-file=\${AWS_BUILD_UPLOAD_CONFIG} \
-                    --acl=public-read ${s3_stream_dir}/builds
-                """)
-                pipeutils.bump_builds_json(
-                    params.STREAM,
-                    newBuildID,
-                    basearch,
-                    s3_stream_dir)
-            }
-        }
+//      // If we are uploading results then let's do an early archive
+//      // of just the OSTree. This has the desired side effect of
+//      // reserving our build ID before we fork off multi-arch builds.
+//      stage('Archive OSTree') {
+//          if (uploading) {
+//              // run with --force here in case the previous run of the
+//              // pipeline died in between buildupload and bump_builds_json()
+//              pipeutils.shwrapWithAWSBuildUploadCredentials("""
+//              cosa buildupload --force --skip-builds-json --artifact=ostree \
+//                  s3 --aws-config-file=\${AWS_BUILD_UPLOAD_CONFIG} \
+//                  --acl=public-read ${s3_stream_dir}/builds
+//              """)
+//              pipeutils.bump_builds_json(
+//                  params.STREAM,
+//                  newBuildID,
+//                  basearch,
+//                  s3_stream_dir)
+//          }
+//      }
 
-        stage('Fork Multi-Arch Builds') {
-            if (uploading) {
-                for (arch in additional_arches) {
-                    // We pass in FORCE=true here since if we got this far we know
-                    // we want to do a build even if the code tells us that there
-                    // are no apparent changes since the previous commit.
-                    build job: 'build-arch', wait: false, parameters: [
-                        booleanParam(name: 'FORCE', value: true),
-                        booleanParam(name: 'ALLOW_KOLA_UPGRADE_FAILURE', value: params.ALLOW_KOLA_UPGRADE_FAILURE),
-                        string(name: 'SRC_CONFIG_COMMIT', value: src_config_commit),
-                        string(name: 'COREOS_ASSEMBLER_IMAGE', value: cosa_img),
-                        string(name: 'STREAM', value: params.STREAM),
-                        string(name: 'VERSION', value: newBuildID),
-                        string(name: 'ARCH', value: arch),
-                        string(name: 'PIPECFG_HOTFIX_REPO', value: params.PIPECFG_HOTFIX_REPO),
-                        string(name: 'PIPECFG_HOTFIX_REF', value: params.PIPECFG_HOTFIX_REF)
-                    ]
-                }
-            }
-        }
+//      stage('Fork Multi-Arch Builds') {
+//          if (uploading) {
+//              for (arch in additional_arches) {
+//                  // We pass in FORCE=true here since if we got this far we know
+//                  // we want to do a build even if the code tells us that there
+//                  // are no apparent changes since the previous commit.
+//                  build job: 'build-arch', wait: false, parameters: [
+//                      booleanParam(name: 'FORCE', value: true),
+//                      booleanParam(name: 'ALLOW_KOLA_UPGRADE_FAILURE', value: params.ALLOW_KOLA_UPGRADE_FAILURE),
+//                      string(name: 'SRC_CONFIG_COMMIT', value: src_config_commit),
+//                      string(name: 'COREOS_ASSEMBLER_IMAGE', value: cosa_img),
+//                      string(name: 'STREAM', value: params.STREAM),
+//                      string(name: 'VERSION', value: newBuildID),
+//                      string(name: 'ARCH', value: arch),
+//                      string(name: 'PIPECFG_HOTFIX_REPO', value: params.PIPECFG_HOTFIX_REPO),
+//                      string(name: 'PIPECFG_HOTFIX_REF', value: params.PIPECFG_HOTFIX_REF)
+//                  ]
+//              }
+//          }
+//      }
 
         // Build the remaining artifacts
         stage("Build Artifacts") {
@@ -387,6 +387,11 @@ lock(resource: "build-${params.STREAM}") {
             }
 
             if (uploading) {
+                pipeutils.bump_builds_json(
+                    params.STREAM,
+                    newBuildID,
+                    basearch,
+                    s3_stream_dir)
                 // just upload as public-read for now, but see discussions in
                 // https://github.com/coreos/fedora-coreos-tracker/issues/189
                 pipeutils.shwrapWithAWSBuildUploadCredentials("""
@@ -394,6 +399,27 @@ lock(resource: "build-${params.STREAM}") {
                     --aws-config-file \${AWS_BUILD_UPLOAD_CONFIG} \
                     --acl=public-read ${s3_stream_dir}/builds
                 """)
+            }
+        }
+
+        stage('Fork Multi-Arch Builds') {
+            if (uploading) {
+                for (arch in additional_arches) {
+                    // We pass in FORCE=true here since if we got this far we know
+                    // we want to do a build even if the code tells us that there
+                    // are no apparent changes since the previous commit.
+                    build job: 'build-arch', wait: false, parameters: [
+                        booleanParam(name: 'FORCE', value: true),
+                        booleanParam(name: 'ALLOW_KOLA_UPGRADE_FAILURE', value: params.ALLOW_KOLA_UPGRADE_FAILURE),
+                        string(name: 'SRC_CONFIG_COMMIT', value: src_config_commit),
+                        string(name: 'COREOS_ASSEMBLER_IMAGE', value: cosa_img),
+                        string(name: 'STREAM', value: params.STREAM),
+                        string(name: 'VERSION', value: newBuildID),
+                        string(name: 'ARCH', value: arch),
+                        string(name: 'PIPECFG_HOTFIX_REPO', value: params.PIPECFG_HOTFIX_REPO),
+                        string(name: 'PIPECFG_HOTFIX_REF', value: params.PIPECFG_HOTFIX_REF)
+                    ]
+                }
             }
         }
 
