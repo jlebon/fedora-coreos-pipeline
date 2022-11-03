@@ -57,6 +57,10 @@ boolean checkKolaSuccess(file) {
     return true
 }
 
+def splitBucketKey(bucket_path) {
+    return bucket_path.split('/', 2)
+}
+
 def aws_s3_cp_allow_noent(src, dest) {
     // see similar code in `cosa buildfetch`
     shwrapWithAWSBuildUploadCredentials("""

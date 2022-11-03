@@ -23,6 +23,8 @@ cosaPod() {
         branch: 'main', credentialsId: 'github-coreosbot-token-username-password')
     withCredentials([file(credentialsId: 'aws-build-upload-config', variable: 'AWS_CONFIG_FILE')]) {
         def production_streams = pipeutils.streams_of_type(pipecfg, 'production')
+        def s3_stream_dir = utils.substituteStr(pipecfg.s3_bucket, [STREAM: params.STREAM])
+        def (bucket, subpath) = pipeutils.splitBucketKey(s3_stream_dir)
 
         // NB: we don't use `aws s3 sync` here because it's timestamp-based and
         // so our fresh git clone will always seem newer and always get
@@ -31,14 +33,14 @@ cosaPod() {
         // if so
         production_streams.each{stream ->
             for (subdir in ["streams", "updates"]) {
-                shwrap("aws s3 cp s3://${pipecfg.s3_bucket}/${subdir}/${stream}.json ${subdir}/${stream}.json")
+                shwrap("aws s3 cp s3://${bucket}/${subdir}/${stream}.json ${subdir}/${stream}.json")
             }
             if (shwrapRc("git diff --exit-code") != 0) {
                 shwrap("git reset --hard HEAD")
                 for (subdir in ["streams", "updates"]) {
                     shwrap("""
                         aws s3 cp --acl public-read --cache-control 'max-age=60' \
-                            ${subdir}/${stream}.json s3://${pipecfg.s3_bucket}/${subdir}/${stream}.json
+                            ${subdir}/${stream}.json s3://${bucket}/${subdir}/${stream}.json
                     """)
                 }
                 pipeutils.tryWithMessagingCredentials() {
@@ -56,7 +58,7 @@ cosaPod() {
                 python3 -c 'import sys, yaml, json; json.dump(yaml.safe_load(sys.stdin.read()), sys.stdout)' \
                     < release-notes/${stream}.yml > release-notes/${stream}.json
                 aws s3 cp --acl public-read --cache-control 'max-age=60' \
-                    release-notes/${stream}.json s3://${pipecfg.s3_bucket}/release-notes/${stream}.json
+                    release-notes/${stream}.json s3://${bucket}/release-notes/${stream}.json
             """)
         }
     }

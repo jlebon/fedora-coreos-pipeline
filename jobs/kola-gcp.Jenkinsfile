@@ -48,7 +48,7 @@ currentBuild.description = "[${params.STREAM}][${params.ARCH}] - ${params.VERSIO
 
 def s3_stream_dir = params.S3_STREAM_DIR
 if (s3_stream_dir == "") {
-    s3_stream_dir = "${pipecfg.s3_bucket}/prod/streams/${params.STREAM}"
+    s3_stream_dir = utils.substituteStr(pipecfg.s3_bucket, [STREAM: params.STREAM])
 }
 
 try { timeout(time: 30, unit: 'MINUTES') {

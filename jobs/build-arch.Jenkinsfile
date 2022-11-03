@@ -115,8 +115,7 @@ lock(resource: "build-${params.STREAM}-${basearch}") {
         def s3_stream_dir
 
         if (pipecfg.s3_bucket && pipeutils.AWSBuildUploadCredentialExists()) {
-            // see bucket layout in https://github.com/coreos/fedora-coreos-tracker/issues/189
-            s3_stream_dir = "${pipecfg.s3_bucket}/prod/streams/${params.STREAM}"
+            s3_stream_dir = utils.substituteStr(pipecfg.s3_bucket, [STREAM: params.STREAM])
         }
 
         // Now, determine if we should do any uploads to remote s3 buckets or clouds
