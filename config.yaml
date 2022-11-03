@@ -29,6 +29,8 @@ s3_bucket: "fcos-builds/prod/streams/${STREAM}"
 registry_repos:
   oscontainer: quay.io/fedora/fedora-coreos
 
+versionary_hack: true
+
 default_artifacts:
   all:
     - metal
