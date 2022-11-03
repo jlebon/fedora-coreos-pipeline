@@ -268,8 +268,13 @@ oc create secret generic slack-api-token --from-literal=text="${TOKEN}"
 oc label secret/slack-api-token \
     jenkins.io/credentials-type=secretText
 oc annotate secret/slack-api-token \
-    jenkins.io/credentials-description="Slack API token"
+    jenkins.io/credentials-description="Slack API token" \
+    jenkins.io/default-channel="#fedora-coreos-jenkins"
 ```
+
+For FCOS, leave the default channel to `#fedora-coreos-jenkins`. For
+RHCOS, set the channel to either `#jenkins-rhcos-devel` (for the devel
+RHCOS pipeline) or `#jenkins-rhcos-art` (for the ART RHCOS pipeline).
 
 You can obtain a token when creating a new instance of the Jenkins CI
 app in your Slack workspace. The token used for the `coreos.slack.com`

@@ -431,9 +431,19 @@ def AWSBuildUploadCredentialExists() {
     return utils.credentialsExist(creds)
 }
 
+def getSlackDefaultChannel() {
+    return shwrapCapture("""
+        oc get secret -n ${env.PROJECT_NAME} -o json slack-api-token | \
+          jq -r '.metadata.annotations["jenkins.io/default-channel"]'
+    """)
+}
+
 // Emits Slack message if set up, otherwise does nothing.
 def trySlackSend(params) {
     if (utils.credentialsExist([string(credentialsId: 'slack-api-token'), variable: 'UNUSED'])) {
+        if (!("channel" in params)) {
+            params["channel"] = getSlackDefaultChannel()
+        }
         slackSend(params)
     }
 }
