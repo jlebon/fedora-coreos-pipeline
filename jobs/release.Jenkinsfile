@@ -33,9 +33,16 @@ properties([
              description: 'Override coreos-assembler image to use',
              defaultValue: "",
              trim: true)
-    ]),
+    ] + pipeutils.add_hotfix_parameters_if_supported()),
     durabilityHint('PERFORMANCE_OPTIMIZED')
 ])
+
+// Reload pipecfg if a hotfix build was provided. The reason we do this here
+// instead of loading the right one upfront is so that we don't modify the
+// parameter definitions above and their default values.
+if (params.PIPECFG_HOTFIX_REPO || params.PIPECFG_HOTFIX_REF) {
+    pipecfg = pipeutils.load_pipecfg(params.PIPECFG_HOTFIX_REPO, params.PIPECFG_HOTFIX_REF)
+}
 
 // no way to make a parameter required directly so manually check
 // https://issues.jenkins-ci.org/browse/JENKINS-3509
@@ -63,7 +70,7 @@ lock(resource: "release-${params.STREAM}", extra: locks) {
     cosaPod(cpu: "1", memory: "512Mi", image: cosa_img) {
     try {
 
-        def s3_stream_dir = utils.substituteStr(pipecfg.s3_bucket, [STREAM: params.STREAM])
+        def s3_stream_dir = pipeutils.get_s3_streams_dir(pipecfg, params.STREAM)
         def gcp_image = ""
         def ostree_prod_refs = [:]
 
@@ -228,6 +235,9 @@ lock(resource: "release-${params.STREAM}", extra: locks) {
                                           credentialsId: 'oscontainer-push-registry-secret')]) {
                         def repo = registry_repos[configname]
                         def (artifact, metajsonname, tag_suffix) = val
+                        if (pipecfg.hotfix) {
+                            tag_suffix += "-${pipecfg.hotfix.name}"
+                        }
                         def extra_args = basearches.collect{"--arch ${it}"}
                         if (registry_repos.v2s2) {
                             extra_args += "--v2s2"

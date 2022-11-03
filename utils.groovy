@@ -20,10 +20,10 @@ def load_jenkins_config() {
     """))
 }
 
-def load_pipecfg() {
+def load_pipecfg(hotfix_url = "", hotfix_ref = "") {
     def jenkinscfg = load_jenkins_config()
-    def url = jenkinscfg['pipecfg-url']
-    def ref = jenkinscfg['pipecfg-ref']
+    def url = hotfix_url ?: jenkinscfg['pipecfg-url']
+    def ref = hotfix_ref ?: jenkinscfg['pipecfg-ref']
 
     def pipecfg
     if (url == 'in-tree') {
@@ -39,11 +39,19 @@ def load_pipecfg() {
         ])
         pipecfg = readYaml(file: "pipecfg/config.yaml")
     }
-    validate_pipecfg(pipecfg)
+    validate_pipecfg(pipecfg, hotfix_url || hotfix_ref)
     return pipecfg
 }
 
-def validate_pipecfg(pipecfg) {
+def validate_pipecfg(pipecfg, is_hotfix) {
+    // Verify that the hotfix override is only used with pipecfgs that define a
+    // 'hotfix', and that the canonical pipecfg never has a 'hotfix' section.
+    if (is_hotfix && !pipecfg.hotfix) {
+        error("Missing 'hotfix' section in pipecfg.")
+    } else if (!is_hotfix && pipecfg.hotfix) {
+        error("Unexpected 'hotfix' section in pipecfg.")
+    }
+
     if (env.JENKINS_URL in PROTECTED_JENKINSES) {
         // We're running on a protected Jenkins instance. Check the hotfix
         // build policy and that S3 buckets are as expected.
@@ -67,6 +75,40 @@ def validate_pipecfg(pipecfg) {
             error("S3 bucket ${target_bucket} can only be used on ${protected_buckets[target_bucket]}")
         }
     }
+
+    // sanity-check hotfix section upfront to not waste time
+    if (pipecfg.hotfix) {
+        assert pipecfg.hotfix.name : "Hotfix missing 'name' member"
+        assert pipecfg.hotfix.name =~ '^[a-zA-Z0-9-_]+$'
+    }
+}
+
+def add_hotfix_parameters_if_supported() {
+    if (env.JENKINS_URL in PROTECTED_JENKINSES) {
+        def (bucket_prefix, allow_hotfixes) = PROTECTED_JENKINSES[env.JENKINS_URL]
+        if (allow_hotfixes) {
+            return [
+                string(name: 'PIPECFG_HOTFIX_REPO',
+                       description: 'Hotfix repo URL with pipecfg',
+                       defaultValue: "",
+                       trim: true),
+                string(name: 'PIPECFG_HOTFIX_REF',
+                       description: 'Hotfix repo ref with pipecfg',
+                       defaultValue: "",
+                       trim: true),
+            ]
+        }
+    }
+    return []
+}
+
+// Provides hotfix-aware S3 bucket and prefix for artifact pushing/pulling.
+def get_s3_streams_dir(pipecfg, stream) {
+    if (pipecfg.hotfix) {
+        assert pipecfg.s3_bucket.contains('${STREAM}')
+        stream += "-hotfix-${pipecfg.hotfix.name}"
+    }
+    return utils.substituteStr(pipecfg.s3_bucket, [STREAM: stream])
 }
 
 def get_source_config_ref_for_stream(pipecfg, stream) {

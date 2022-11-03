@@ -45,13 +45,20 @@ properties([
       booleanParam(name: 'NO_UPLOAD',
                    defaultValue: false,
                    description: 'Do not upload results to S3; for debugging purposes.'),
-    ]),
+    ] + pipeutils.add_hotfix_parameters_if_supported()),
     buildDiscarder(logRotator(
         numToKeepStr: '100',
         artifactNumToKeepStr: '100'
     )),
     durabilityHint('PERFORMANCE_OPTIMIZED')
 ])
+
+// Reload pipecfg if a hotfix build was provided. The reason we do this here
+// instead of loading the right one upfront is so that we don't modify the
+// parameter definitions above and their default values.
+if (params.PIPECFG_HOTFIX_REPO || params.PIPECFG_HOTFIX_REF) {
+    pipecfg = pipeutils.load_pipecfg(params.PIPECFG_HOTFIX_REPO, params.PIPECFG_HOTFIX_REF)
+}
 
 // runtime parameter always wins
 def cosa_img = params.COREOS_ASSEMBLER_IMAGE
@@ -97,7 +104,7 @@ lock(resource: "build-${params.STREAM}") {
         def s3_stream_dir
 
         if (pipecfg.s3_bucket && pipeutils.AWSBuildUploadCredentialExists()) {
-            s3_stream_dir = utils.substituteStr(pipecfg.s3_bucket, [STREAM: params.STREAM])
+            s3_stream_dir = pipeutils.get_s3_streams_dir(pipecfg, params.STREAM)
         }
 
         // Now, determine if we should do any uploads to remote s3 buckets or clouds
@@ -322,7 +329,9 @@ lock(resource: "build-${params.STREAM}") {
                         string(name: 'COREOS_ASSEMBLER_IMAGE', value: cosa_img),
                         string(name: 'STREAM', value: params.STREAM),
                         string(name: 'VERSION', value: newBuildID),
-                        string(name: 'ARCH', value: arch)
+                        string(name: 'ARCH', value: arch),
+                        string(name: 'PIPECFG_HOTFIX_REPO', value: params.PIPECFG_HOTFIX_REPO),
+                        string(name: 'PIPECFG_HOTFIX_REF', value: params.PIPECFG_HOTFIX_REF)
                     ]
                 }
             }
@@ -358,7 +367,8 @@ lock(resource: "build-${params.STREAM}") {
         }
 
         // Upload to relevant clouds
-        if (uploading) {
+        // XXX: we don't support cloud uploads yet for hotfixes
+        if (uploading && !pipecfg.hotfix) {
             stage('Cloud Upload') {
                 libupload.upload_to_clouds(pipecfg, basearch, newBuildID, params.STREAM)
             }
@@ -414,7 +424,7 @@ lock(resource: "build-${params.STREAM}") {
         }
 
         // Now that the metadata is uploaded go ahead and kick off some followup tests.
-        if (uploading) {
+        if (uploading && !pipecfg.hotfix) {
             stage('Cloud Tests') {
                 pipeutils.run_cloud_tests(pipecfg, params.STREAM, newBuildID,
                                           s3_stream_dir, basearch, src_config_commit)
@@ -434,7 +444,9 @@ lock(resource: "build-${params.STREAM}") {
                     string(name: 'ARCHES', value: basearch + " " + params.ADDITIONAL_ARCHES),
                     string(name: 'VERSION', value: newBuildID),
                     booleanParam(name: 'ALLOW_MISSING_ARCHES', value: true),
-                    booleanParam(name: 'AWS_REPLICATION', value: params.AWS_REPLICATION)
+                    booleanParam(name: 'AWS_REPLICATION', value: params.AWS_REPLICATION),
+                    string(name: 'PIPECFG_HOTFIX_REPO', value: params.PIPECFG_HOTFIX_REPO),
+                    string(name: 'PIPECFG_HOTFIX_REF', value: params.PIPECFG_HOTFIX_REF)
                 ]
             }
         }
