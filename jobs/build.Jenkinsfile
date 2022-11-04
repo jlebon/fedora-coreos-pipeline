@@ -325,7 +325,7 @@ lock(resource: "build-${params.STREAM}") {
                     // we want to do a build even if the code tells us that there
                     // are no apparent changes since the previous commit.
                     build job: 'build-arch', wait: false, parameters: [
-                        booleanParam(name: 'FORCE', value: true),
+                        boolanParam(name: 'FORCE', value: true),
                         booleanParam(name: 'ALLOW_KOLA_UPGRADE_FAILURE', value: params.ALLOW_KOLA_UPGRADE_FAILURE),
                         string(name: 'SRC_CONFIG_COMMIT', value: src_config_commit),
                         string(name: 'COREOS_ASSEMBLER_IMAGE', value: cosa_img),
