@@ -426,7 +426,7 @@ lock(resource: "build-${params.STREAM}") {
         // Now that the metadata is uploaded go ahead and kick off some followup tests.
         if (uploading && !pipecfg.hotfix) {
             stage('Cloud Tests') {
-                pipeutils.run_cloud_tests(pipecfg, params.STREAM, newBuildID,
+                pipeutils.un_cloud_tests(pipecfg, params.STREAM, newBuildID,
                                           s3_stream_dir, basearch, src_config_commit)
             }
         }
@@ -443,7 +443,7 @@ lock(resource: "build-${params.STREAM}") {
                     string(name: 'STREAM', value: params.STREAM),
                     string(name: 'ARCHES', value: basearch + " " + params.ADDITIONAL_ARCHES),
                     string(name: 'VERSION', value: newBuildID),
-                    ooleanParam(name: 'ALLOW_MISSING_ARCHES', value: true),
+                    booleanParam(name: 'ALLOW_MISSING_ARCHES', value: true),
                     booleanParam(name: 'AWS_REPLICATION', value: params.AWS_REPLICATION),
                     string(name: 'PIPECFG_HOTFIX_REPO', value: params.PIPECFG_HOTFIX_REPO),
                     string(name: 'PIPECFG_HOTFIX_REF', value: params.PIPECFG_HOTFIX_REF)
