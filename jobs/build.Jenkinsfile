@@ -1,5 +1,3 @@
-return this
-
 import org.yaml.snakeyaml.Yaml;
 
 def pipeutils, pipecfg, uploading, libupload
@@ -325,7 +323,7 @@ lock(resource: "build-${params.STREAM}") {
                     // we want to do a build even if the code tells us that there
                     // are no apparent changes since the previous commit.
                     build job: 'build-arch', wait: false, parameters: [
-                        boolanParam(name: 'FORCE', value: true),
+                        booleanParam(name: 'FORCE', value: true),
                         booleanParam(name: 'ALLOW_KOLA_UPGRADE_FAILURE', value: params.ALLOW_KOLA_UPGRADE_FAILURE),
                         string(name: 'SRC_CONFIG_COMMIT', value: src_config_commit),
                         string(name: 'COREOS_ASSEMBLER_IMAGE', value: cosa_img),
@@ -445,7 +443,7 @@ lock(resource: "build-${params.STREAM}") {
                     string(name: 'STREAM', value: params.STREAM),
                     string(name: 'ARCHES', value: basearch + " " + params.ADDITIONAL_ARCHES),
                     string(name: 'VERSION', value: newBuildID),
-                    booleanParam(name: 'ALLOW_MISSING_ARCHES', value: true),
+                    ooleanParam(name: 'ALLOW_MISSING_ARCHES', value: true),
                     booleanParam(name: 'AWS_REPLICATION', value: params.AWS_REPLICATION),
                     string(name: 'PIPECFG_HOTFIX_REPO', value: params.PIPECFG_HOTFIX_REPO),
                     string(name: 'PIPECFG_HOTFIX_REF', value: params.PIPECFG_HOTFIX_REF)
@@ -491,4 +489,4 @@ lock(resource: "build-${params.STREAM}") {
             --state FINISHED --result ${currentBuild.result}
         """)
     }
-}}} // finally, cosaPod, timeout, and locks finish here
+}}}} // finally, cosaPod, timeout, and locks finish here
