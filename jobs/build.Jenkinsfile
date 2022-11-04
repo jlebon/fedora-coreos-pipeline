@@ -1,3 +1,5 @@
+return this
+
 import org.yaml.snakeyaml.Yaml;
 
 def pipeutils, pipecfg, uploading, libupload

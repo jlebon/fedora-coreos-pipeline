@@ -7,6 +7,8 @@ node {
     pipecfg = pipeutils.load_pipecfg()
 }
 
+def first_run = params.ARCHES == null
+
 properties([
     pipelineTriggers([
         // run every 3 days to ensure regular updates
@@ -74,6 +76,10 @@ properties([
     )),
     durabilityHint('PERFORMANCE_OPTIMIZED')
 ])
+
+if (first_run) {
+    echo "First run of parameterized job detected; please rerun this job with parameters set"
+}
 
 node {
     change = checkout(

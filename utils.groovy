@@ -517,7 +517,8 @@ def getSlackDefaultChannel() {
 
 // Emits Slack message if set up, otherwise does nothing.
 def trySlackSend(params) {
-    if (utils.credentialsExist([string(credentialsId: 'slack-api-token'), variable: 'UNUSED'])) {
+    def creds = [string(credentialsId: 'slack-api-token', variable: 'UNUSED')]
+    if (utils.credentialsExist(creds)) {
         if (!("channel" in params)) {
             params["channel"] = getSlackDefaultChannel()
         }
