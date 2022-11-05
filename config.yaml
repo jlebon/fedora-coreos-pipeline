@@ -19,10 +19,10 @@ streams:
     # bodhi-updates-testing:
     #   type: mechanical
 
-additional_arches: []
+additional_arches: [aarch64]
 
-#hotfix:
-#  name: jlebon-test
+hotfix:
+  name: jlebon-test
 
 source_config:
   url: https://github.com/coreos/fedora-coreos-config
