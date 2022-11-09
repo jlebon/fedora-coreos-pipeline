@@ -1,3 +1,6 @@
+hotfix:
+  name: jlebon-test
+
 streams:
     "4.13":
       type: mechanical
@@ -117,8 +120,8 @@ cosa_img: quay.io/coreos-assembler/staging:rhcos-${STREAM}-new
 additional_arches: [aarch64, ppc64le, s390x]
 
 source_config:
-  url: https://github.com/dustymabe/os
-  ref: release-${STREAM}
+  url: https://github.com/jlebon/os
+  ref: hotfix-test
   yumrepos: https://gitlab.cee.redhat.com/coreos/redhat-coreos.git
 
 default_artifacts:
@@ -137,7 +140,7 @@ default_artifacts:
   s390x:
     - dasd
     - ibmcloud
-  x86_64:
+  x86_64: []
 #   - aliyun
 #   - aws
 #   - azure
