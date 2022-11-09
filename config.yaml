@@ -125,10 +125,10 @@ default_artifacts:
   all:
     - extensions-container
     - legacy-oscontainer
-    - live
-    - metal
-    - metal4k
-    - openstack
+#   - live
+#   - metal
+#   - metal4k
+#   - openstack
   aarch64:
     - aws
     - azure
@@ -138,14 +138,14 @@ default_artifacts:
     - dasd
     - ibmcloud
   x86_64:
-    - aliyun
-    - aws
-    - azure
-    - azurestack
-    - gcp
-    - ibmcloud
-    - nutanix
-    - vmware
+#   - aliyun
+#   - aws
+#   - azure
+#   - azurestack
+#   - gcp
+#   - ibmcloud
+#   - nutanix
+#   - vmware
 
 s3:
   bucket: rhcos-ci
