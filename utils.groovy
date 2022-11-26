@@ -260,7 +260,7 @@ def triggered_by_seed() {
     if (causes.size() == 0) {
         return false
     }
-    return causes[0].upstreamProject == "seed"
+    return causes[0].upstreamProject == "jlebon-tmp"
 }
 
 // Runs closure if credentials exist or not.
