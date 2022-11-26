@@ -12,11 +12,12 @@ jobs:
           cps {
             sandbox(true)
             script('''
+              def first_run = (params.FORCE == null)
               properties([
                 parameters([
                   booleanParam(name: 'FORCE',
                                defaultValue: false,
-                               description: 'Whether to redefine existing jobs (make sure to rerun all jobs with triggers to re-activate them)'),
+                               description: 'Whether to redefine existing jobs.'),
                 ]),
                 durabilityHint('PERFORMANCE_OPTIMIZED')
               ])
@@ -51,6 +52,9 @@ jobs:
                       }
                     }
                   """
+                  if (first_run || params.FORCE) {
+                      build job: jobName, wait: false
+                  }
                 }
               }
             '''.stripIndent())

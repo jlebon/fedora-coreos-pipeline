@@ -39,6 +39,12 @@ properties([
     durabilityHint('PERFORMANCE_OPTIMIZED')
 ])
 
+if (pipeutils.triggered_by_seed()) {
+    println("Triggered by seed job.")
+    currentBuild.description = "[triggered by seed job] 🔄"
+    return
+}
+
 currentBuild.description = "[${params.STREAM}][${params.ARCH}] - ${params.VERSION}"
 
 // Use eastus region for now

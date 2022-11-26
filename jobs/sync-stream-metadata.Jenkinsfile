@@ -18,6 +18,12 @@ properties([
     durabilityHint('PERFORMANCE_OPTIMIZED')
 ])
 
+if (pipeutils.triggered_by_seed()) {
+    println("Triggered by seed job.")
+    currentBuild.description = "[triggered by seed job] 🔄"
+    return
+}
+
 cosaPod() {
     git(url: 'https://github.com/coreos/fedora-coreos-streams',
         branch: 'main', credentialsId: 'github-coreosbot-token-username-password')

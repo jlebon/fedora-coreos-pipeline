@@ -64,6 +64,12 @@ properties([
     durabilityHint('PERFORMANCE_OPTIMIZED')
 ])
 
+if (pipeutils.triggered_by_seed()) {
+    println("Triggered by seed job.")
+    currentBuild.description = "[triggered by seed job] 🔄"
+    return
+}
+
 node {
     change = checkout(
         changelog: true,

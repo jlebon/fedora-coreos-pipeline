@@ -35,6 +35,12 @@ properties([
     durabilityHint('PERFORMANCE_OPTIMIZED')
 ])
 
+if (pipeutils.triggered_by_seed()) {
+    println("Triggered by seed job.")
+    currentBuild.description = "[triggered by seed job] 🔄"
+    return
+}
+
 currentBuild.description = "[${params.STREAM}][${params.ARCH}] - ${params.VERSION}"
 
 def s3_stream_dir = pipeutils.get_s3_streams_dir(pipecfg, params.STREAM)

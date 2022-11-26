@@ -254,6 +254,15 @@ def triggered_by_push() {
     return (currentBuild.getBuildCauses('com.cloudbees.jenkins.GitHubPushCause').size() > 0)
 }
 
+// Returns true if the build was triggered by the seed job.
+def triggered_by_seed() {
+    def causes = currentBuild.getBuildCauses('org.jenkinsci.plugins.workflow.support.steps.build.BuildUpstreamCause')
+    if (causes.size() == 0) {
+        return false
+    }
+    return causes[0].upstreamProject == "seed"
+}
+
 // Runs closure if credentials exist or not.
 def tryWithOrWithoutCredentials(creds, Closure body) {
     try {

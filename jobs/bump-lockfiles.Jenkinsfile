@@ -13,6 +13,13 @@ properties([
 node {
     checkout scm
     def pipeutils = load("utils.groovy")
+
+    if (pipeutils.triggered_by_seed()) {
+        println("Triggered by seed job.")
+        currentBuild.description = "[triggered by seed job] 🔄"
+        return
+    }
+
     def pipecfg = pipeutils.load_pipecfg()
     def development_streams = pipeutils.streams_of_type(pipecfg, 'development')
 

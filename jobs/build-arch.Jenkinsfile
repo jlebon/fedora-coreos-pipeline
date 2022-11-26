@@ -11,7 +11,6 @@ node {
 // Base URL through which to download artifacts
 BUILDS_BASE_HTTP_URL = "https://builds.coreos.fedoraproject.org/prod/streams"
 
-
 properties([
     pipelineTriggers([]),
     parameters([
@@ -56,6 +55,12 @@ properties([
     )),
     durabilityHint('PERFORMANCE_OPTIMIZED')
 ])
+
+if (pipeutils.triggered_by_seed()) {
+    println("Triggered by seed job.")
+    currentBuild.description = "[triggered by seed job] 🔄"
+    return
+}
 
 def build_description = "[${params.STREAM}][${params.ARCH}]"
 

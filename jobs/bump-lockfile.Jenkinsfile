@@ -37,6 +37,12 @@ properties([
     durabilityHint('PERFORMANCE_OPTIMIZED')
 ])
 
+if (pipeutils.triggered_by_seed()) {
+    println("Triggered by seed job.")
+    currentBuild.description = "[triggered by seed job] 🔄"
+    return
+}
+
 // runtime parameter always wins
 def cosa_img = params.COREOS_ASSEMBLER_IMAGE
 cosa_img = cosa_img ?: pipeutils.get_cosa_img(pipecfg, params.STREAM)

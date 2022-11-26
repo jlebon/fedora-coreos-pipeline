@@ -33,6 +33,12 @@ properties([
     durabilityHint('PERFORMANCE_OPTIMIZED')
 ])
 
+if (pipeutils.triggered_by_seed()) {
+    println("Triggered by seed job.")
+    currentBuild.description = "[triggered by seed job] 🔄"
+    return
+}
+
 def build_description = "[${params.STREAM}]"
 
 // Reload pipecfg if a hotfix build was provided. The reason we do this here

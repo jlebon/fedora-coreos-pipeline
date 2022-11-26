@@ -39,6 +39,12 @@ properties([
     durabilityHint('PERFORMANCE_OPTIMIZED')
 ])
 
+if (pipeutils.triggered_by_seed()) {
+    println("Triggered by seed job.")
+    currentBuild.description = "[triggered by seed job] 🔄"
+    return
+}
+
 currentBuild.description = "[${params.STREAM}][${params.ARCH}] - ${params.VERSION}"
 
 // Use ca-ymq-1 for everything right now since we're having trouble with
