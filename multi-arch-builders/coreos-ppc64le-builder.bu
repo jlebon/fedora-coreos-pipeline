@@ -23,3 +23,16 @@ storage:
       overwrite: true
       contents:
         inline: coreos-ppc64le-builder
+  disks:
+    - device: /dev/disk/by-id/coreos-boot-disk
+      partitions:
+        - label: root
+          number: 4
+          size_mib: 0
+          resize: true
+  filesystems:
+    - device: /dev/disk/by-partlabel/root
+      wipe_filesystem: true
+      format: xfs
+      label: root
+      options: [-m, reflink=1]
