@@ -28,13 +28,13 @@ streams:
     # bodhi-updates-testing:
     #   type: mechanical
 
-additional_arches: [aarch64, ppc64le, s390x]
+additional_arches: [aarch64, s390x]
 
 source_config:
   url: https://github.com/coreos/fedora-coreos-config
 
 s3:
-  bucket: fcos-builds
+  bucket: prod-account-match-fcos-builds
   # see bucket layout in https://github.com/coreos/fedora-coreos-tracker/issues/189
   builds_key: "prod/streams/${STREAM}"
   # just upload as public-read for now, but see discussions in
@@ -49,30 +49,6 @@ versionary_hack: true
 default_artifacts:
   all:
     - metal
-    - metal4k
-    - live
-    - openstack
-    - hashlist-experimental
-  aarch64:
-    - aws
-    - azure
-  ppc64le:
-    - powervs
-  s390x:
-    - ibmcloud
-  x86_64:
-    - aliyun
-    - aws
-    - azure
-    - azurestack
-    - digitalocean
-    - exoscale
-    - gcp
-    - ibmcloud
-    - nutanix
-    - virtualbox
-    - vmware
-    - vultr
 
 clouds:
   aws:
