@@ -418,7 +418,7 @@ lock(resource: "build-${params.STREAM}-${basearch}") {
     }
 
     echo message
-    pipeutils.trySlackSend(message: message)
+    // pipeutils.trySlackSend(message: message)
     pipeutils.tryWithMessagingCredentials() {
         shwrap("""
         /usr/lib/coreos-assembler/fedmsg-broadcast --fedmsg-conf=\${FEDORA_MESSAGING_CONF} \
