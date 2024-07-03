@@ -42,3 +42,4 @@ data-tables-api:2.0.3-1
 mailer:470.vc91f60c5d8e2
 workflow-support:896.v175a_a_9c5b_78f
 jakarta-mail-api:2.1.3-1
+jakarta-activation-api:2.1.3-1
